@@ -1,3 +1,7 @@
+export const config = {
+  runtime: 'nodejs',
+};
+
 import { put } from '@vercel/blob';
 
 export default async function handler(req) {
@@ -9,10 +13,10 @@ export default async function handler(req) {
     const { filename, contentType } = await req.json();
 
     if (!filename || !contentType) {
-      return new Response(
-        JSON.stringify({ error: 'filename dan contentType diperlukan' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'filename dan contentType diperlukan' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const { url, downloadUrl } = await put(filename, {
@@ -21,14 +25,14 @@ export default async function handler(req) {
       token: process.env.BLOB_READ_WRITE_TOKEN,
     });
 
-    return new Response(
-      JSON.stringify({ uploadUrl: url, blobUrl: downloadUrl }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ uploadUrl: url, blobUrl: downloadUrl }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
