@@ -3,10 +3,11 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "functions": {
-    "api/*.js": {
-      "runtime": "nodejs",
-      "memory": 256,
-      "maxDuration": 30
+    "api/upload.js": {
+      "runtime": "nodejs20.x"
+    },
+    "api/delete.js": {
+      "runtime": "nodejs20.x"
     }
   }
 }
