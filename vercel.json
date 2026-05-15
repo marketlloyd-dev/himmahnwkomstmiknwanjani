@@ -1,9 +1,0 @@
-{
-  "functions": {
-    "api/upload.js": { "runtime": "@vercel/node@3" },
-    "api/delete.js": { "runtime": "@vercel/node@3" }
-  },
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
-}
