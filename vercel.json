@@ -1,7 +1,10 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
   "functions": {
     "api/**/*.js": {
+      "runtime": "nodejs",
       "memory": 128,
       "maxDuration": 10
     }
