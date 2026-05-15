@@ -1,13 +1,14 @@
 {
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ],
+  "version": 2,
   "functions": {
     "api/upload.js": {
-      "runtime": "nodejs20.x"
+      "runtime": "vercel/node@20.x"
     },
     "api/delete.js": {
-      "runtime": "nodejs20.x"
+      "runtime": "vercel/node@20.x"
     }
-  }
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
