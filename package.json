@@ -9,6 +9,9 @@
     "lint": "eslint .",
     "preview": "vite preview"
   },
+  "engines": {
+    "node": "24.x"
+  },
   "dependencies": {
     "@vercel/blob": "^0.23.4",
     "lucide-react": "^1.16.0",
