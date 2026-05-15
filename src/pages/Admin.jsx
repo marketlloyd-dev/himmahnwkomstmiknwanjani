@@ -1,51 +1,36 @@
 import { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { adminAccounts } from '../data/config';
+import { upload } from '@vercel/blob/client';
 import {
   LogOut, Plus, Trash2, Edit3, Save, X, Check
 } from 'lucide-react';
 
-// Fungsi upload ke Vercel Blob via serverless function
+const BLOB_TOKEN = import.meta.env.VITE_BLOB_READ_WRITE_TOKEN;
+
+// Upload file ke Vercel Blob
 async function uploadToBlob(file) {
-  // 1. Minta signed URL dari API
-  const response = await fetch('/api/upload', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      filename: `himmah/${Date.now()}-${file.name}`,
-      contentType: file.type,
-    }),
+  if (!BLOB_TOKEN) throw new Error('Token Blob tidak ditemukan');
+  const blob = await upload(file.name, file, {
+    access: 'public',
+    token: BLOB_TOKEN,
   });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || 'Gagal mendapatkan URL upload');
-  }
-
-  const { uploadUrl, blobUrl } = await response.json();
-
-  // 2. Upload file langsung ke Blob storage
-  const uploadResponse = await fetch(uploadUrl, {
-    method: 'PUT',
-    body: file,
-    headers: { 'Content-Type': file.type },
-  });
-
-  if (!uploadResponse.ok) {
-    throw new Error('Gagal mengupload file ke Blob storage');
-  }
-
-  return blobUrl; // URL publik gambar
+  return blob.url;
 }
 
-// Hapus blob (hanya jika URL berasal dari Vercel Blob)
+// Hapus file dari Vercel Blob dengan fetch langsung
 async function deleteBlob(url) {
   if (!url || !url.includes('vercel-storage')) return;
-  await fetch('/api/delete', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url }),
-  });
+  try {
+    await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${BLOB_TOKEN}`,
+      },
+    });
+  } catch (err) {
+    console.error('Gagal menghapus blob:', err);
+  }
 }
 
 export default function Admin() {
