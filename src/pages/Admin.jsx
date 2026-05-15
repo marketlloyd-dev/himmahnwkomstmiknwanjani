@@ -1,32 +1,50 @@
 import { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { adminAccounts } from '../data/config';
-import { upload } from '@vercel/blob/client';
 import {
   LogOut, Plus, Trash2, Edit3, Save, X, Check
 } from 'lucide-react';
 
-const BLOB_TOKEN = import.meta.env.VITE_BLOB_READ_WRITE_TOKEN;
+// API Key ImgBB dari environment variable
+const IMGBB_API_KEY = import.meta.env.VITE_IMGBB_API_KEY;
 
-async function uploadToBlob(file) {
-  if (!BLOB_TOKEN) throw new Error('Token Blob tidak ditemukan');
-  const blob = await upload(file.name, file, {
-    access: 'public',
-    token: BLOB_TOKEN,
+// Konversi file ke base64 (dibutuhkan ImgBB)
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
   });
-  return blob.url;
 }
 
-async function deleteBlob(url) {
-  if (!url || !url.includes('vercel-storage')) return;
-  try {
-    await fetch(url, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${BLOB_TOKEN}` },
-    });
-  } catch (err) {
-    console.error('Gagal menghapus blob:', err);
+// Upload gambar ke ImgBB
+async function uploadImage(file) {
+  if (!IMGBB_API_KEY) throw new Error('API Key ImgBB tidak ditemukan');
+
+  const base64 = await fileToBase64(file);
+  const formData = new FormData();
+  formData.append('key', IMGBB_API_KEY);
+  formData.append('image', base64);
+  formData.append('name', file.name);
+
+  const response = await fetch('https://api.imgbb.com/1/upload', {
+    method: 'POST',
+    body: formData,
+  });
+
+  const result = await response.json();
+  if (!result.success) {
+    throw new Error(result.error?.message || 'Upload gagal');
   }
+
+  return result.data.url; // URL publik gambar
+}
+
+// Fungsi hapus (ImgBB tidak mendukung hapus via API, biarkan kosong)
+async function deleteImage(url) {
+  // Tidak bisa hapus dari ImgBB, abaikan saja
+  console.warn('Penghapusan gambar tidak didukung di ImgBB');
 }
 
 export default function Admin() {
@@ -112,7 +130,7 @@ export default function Admin() {
     if (beritaForm.fotoFile) {
       setIsUploading(true);
       try {
-        fotoUrl = await uploadToBlob(beritaForm.fotoFile);
+        fotoUrl = await uploadImage(beritaForm.fotoFile);
       } catch (err) {
         alert('Gagal upload foto: ' + err.message);
         setIsUploading(false);
@@ -157,8 +175,7 @@ export default function Admin() {
   };
 
   const handleDeleteBerita = async (id) => {
-    const item = berita.find(b => b.id === id);
-    if (item?.foto) await deleteBlob(item.foto);
+    // Tidak perlu hapus dari ImgBB
     saveBerita(berita.filter(b => b.id !== id));
   };
 
@@ -202,8 +219,8 @@ export default function Admin() {
     if (!bannerFile) return;
     setIsUploading(true);
     try {
-      const blobUrl = await uploadToBlob(bannerFile);
-      const newBanner = { id: Date.now(), src: blobUrl, alt: bannerAlt };
+      const imageUrl = await uploadImage(bannerFile);
+      const newBanner = { id: Date.now(), src: imageUrl, alt: bannerAlt };
       saveBanner([...bannerImages, newBanner]);
       setBannerFile(null);
       setBannerAlt('');
@@ -214,8 +231,6 @@ export default function Admin() {
   };
 
   const handleDeleteBanner = async (id) => {
-    const item = bannerImages.find(b => b.id === id);
-    if (item?.src) await deleteBlob(item.src);
     saveBanner(bannerImages.filter(b => b.id !== id));
   };
 
@@ -234,8 +249,8 @@ export default function Admin() {
     if (!logoFile) return;
     setIsUploading(true);
     try {
-      const blobUrl = await uploadToBlob(logoFile);
-      saveLogo(blobUrl);
+      const imageUrl = await uploadImage(logoFile);
+      saveLogo(imageUrl);
       setLogoFile(null);
       setPreviewLogo(null);
       alert('Logo berhasil diperbarui!');
@@ -246,8 +261,7 @@ export default function Admin() {
   };
 
   const handleResetLogo = async () => {
-    if (window.confirm('Reset logo ke default? Logo yang terupload akan dihapus.')) {
-      if (logo && logo.includes('vercel-storage')) await deleteBlob(logo);
+    if (window.confirm('Reset logo ke default? Logo yang terupload akan hilang dari tampilan.')) {
       saveLogo(null);
       setPreviewLogo(null);
       setLogoFile(null);
