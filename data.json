@@ -1,0 +1,54 @@
+{
+  "berita": [
+    {
+      "id": 1,
+      "judul": "HIMMAH NW STMIK Gelar Bakti Sosial di Desa Sembalun",
+      "tanggal": "2024-12-10",
+      "foto": "/img/banner1.jpg",
+      "redaksi": "Kegiatan bakti sosial yang diadakan...",
+      "kategori": "Sosial"
+    },
+    {
+      "id": 2,
+      "judul": "Seminar Nasional Teknologi 4.0",
+      "tanggal": "2024-11-25",
+      "foto": "/img/banner2.jpg",
+      "redaksi": "Bertempat di Aula Kampus STMIK...",
+      "kategori": "Pendidikan"
+    }
+  ],
+  "divisi": [
+    {
+      "id": 1,
+      "nama": "Divisi Dakwah & Keagamaan",
+      "programKerja": ["Pengajian Rutin", "PHBI", "Kajian Kitab"],
+      "anggota": ["Muhammad Ali (Kadiv)", "Hasan Basri"]
+    }
+  ],
+  "pengurus": {
+    "ketua": {
+      "nama": "Ketua",
+      "foto": "/img/ketua.jpg",
+      "nim": "-",
+      "jurusan": "-",
+      "angkatan": "-"
+    },
+    "sekretaris": {
+      "nama": "Sekretaris",
+      "foto": "/img/sekretaris.jpg",
+      "nim": "-",
+      "jurusan": "-",
+      "angkatan": "-"
+    },
+    "bendahara": {
+      "nama": "Bendahara",
+      "foto": "/img/bendahara.jpg",
+      "nim": "-",
+      "jurusan": "-",
+      "angkatan": "-"
+    }
+  },
+  "bannerImages": [],
+  "logo": null,
+  "isLoggedIn": false
+}

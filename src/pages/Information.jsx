@@ -1,23 +1,28 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { pengurusInti, dataKomisariat } from '../data/config';
+import { dataKomisariat } from '../data/config';
 import { ChevronDown, ChevronUp, Users, Target } from 'lucide-react';
 
 export default function Information() {
-  const { divisi } = useApp();
+  const { divisi, pengurus } = useApp();
   const [expandedDivisi, setExpandedDivisi] = useState(null);
-  const { ketua, sekretaris, bendahara } = pengurusInti;
+
+  const defaultPengurus = {
+    ketua: { nama: 'Ketua', foto: '/img/ketua.jpg', jurusan: '-' },
+    sekretaris: { nama: 'Sekretaris', foto: '/img/sekretaris.jpg', jurusan: '-' },
+    bendahara: { nama: 'Bendahara', foto: '/img/bendahara.jpg', jurusan: '-' },
+  };
+  const currentPengurus = pengurus || defaultPengurus;
+  const { ketua, sekretaris, bendahara } = currentPengurus;
 
   const pengurusList = [
-    { ...bendahara, jabatan: 'Bendahara' },
-    { ...ketua, jabatan: 'Ketua Komisariat' },
     { ...sekretaris, jabatan: 'Sekretaris' },
-    
+    { ...ketua, jabatan: 'Ketua Komisariat' },
+    { ...bendahara, jabatan: 'Bendahara' },
   ];
 
   return (
     <div className="min-h-screen pb-16">
-      {/* Header */}
       <div className="bg-gradient-to-br from-[#003d1c] to-[#004d24] py-12 sm:py-16 text-center">
         <h1 className="text-3xl sm:text-4xl font-playfair font-bold text-white">Informasi Komisariat</h1>
         <p className="text-green-300 mt-2">Mengenal lebih dekat HIMMAH NW Komisariat STMIK</p>
@@ -35,13 +40,17 @@ export default function Information() {
           <p className="text-green-100/80 leading-relaxed">{dataKomisariat.deskripsi}</p>
         </div>
 
-        {/* Foto Pengurus Besar */}
+        {/* PENGURUS INTI — horizontal di HP, grid 3 di desktop */}
         <div className="mb-10">
           <h2 className="text-2xl font-playfair font-bold text-white text-center mb-6">Pengurus Inti</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+          <div className="flex sm:grid sm:grid-cols-3 gap-6 overflow-x-auto snap-x sm:snap-none pb-4">
             {pengurusList.map((person, index) => (
-              <div key={index} className="glass rounded-2xl overflow-hidden group hover:scale-[1.02] transition-all">
-                <div className="h-64 sm:h-72 overflow-hidden">
+              <div
+                key={index}
+                className="glass rounded-2xl overflow-hidden group hover:scale-[1.02] transition-all shrink-0 w-64 sm:w-auto snap-center"
+              >
+                <div className="h-48 sm:h-64 overflow-hidden">
                   <img
                     src={person.foto}
                     alt={person.nama}
@@ -51,8 +60,10 @@ export default function Information() {
                     }}
                   />
                 </div>
-                <div className="p-5 text-center">
-                  <span className="text-xs font-semibold bg-green-500/20 text-green-300 px-3 py-1 rounded-full">{person.jabatan}</span>
+                <div className="p-4 text-center">
+                  <span className="text-xs font-semibold bg-green-500/20 text-green-300 px-3 py-1 rounded-full">
+                    {person.jabatan}
+                  </span>
                   <h3 className="text-white font-bold text-lg mt-2">{person.nama}</h3>
                   <p className="text-green-300/70 text-sm">{person.jurusan}</p>
                 </div>

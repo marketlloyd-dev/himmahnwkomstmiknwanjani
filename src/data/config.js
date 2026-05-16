@@ -1,31 +1,19 @@
 // Konfigurasi admin — developer bisa menambahkan akun di sini
 export const adminAccounts = [
-  { username: 'admin', password: 'admin' },
-  { username: 'developer', password: 'dev123456' },
+  { username: 'admin', password: '1223334444' },
 ];
 
 // Data pengurus inti
 export const pengurusInti = {
   ketua: {
     nama: 'Zurrahim',
-    nim: '234857017',
     foto: '/img/ketua.jpg',
-    jurusan: 'Sistem Informasi',
-    angkatan: '2021',
   },
   sekretaris: {
     nama: 'Nur Assifauzohroh',
-    nim: '234857061',
-    foto: '/img/sekretaris.jpg',
-    jurusan: 'Sistem Informasi',
-    angkatan: '2021',
   },
   bendahara: {
     nama: 'Nanda Aulia Prihatin',
-    nim: '244855080',
-    foto: '/img/bendahara.jpg',
-    jurusan: 'Teknik Informatika',
-    angkatan: '2022',
   },
 };
 
