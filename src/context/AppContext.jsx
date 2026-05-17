@@ -1,10 +1,10 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
-// Default hanya dipakai jika tidak ada data sama sekali
+// Data default (fallback)
 const defaultPengurus = {
-  ketua: { nama: 'Ketua', foto: '/img/ketua.jpg', nim: '-', jurusan: '-', angkatan: '-' },
-  sekretaris: { nama: 'Sekretaris', foto: '/img/sekretaris.jpg', nim: '-', jurusan: '-', angkatan: '-' },
-  bendahara: { nama: 'Bendahara', foto: '/img/bendahara.jpg', nim: '-', jurusan: '-', angkatan: '-' },
+  ketua: { nama: 'Ketua', foto: '/img/ketua.jpg', },
+  sekretaris: { nama: 'Sekretaris', foto: '/img/sekretaris.jpg', },
+  bendahara: { nama: 'Bendahara', foto: '/img/bendahara.jpg',},
 };
 
 const defaultDivisi = [
@@ -34,20 +34,23 @@ const defaultBerita = [
   {
     id: 1, judul: 'HIMMAH NW STMIK Gelar Bakti Sosial di Desa Sembalun',
     tanggal: '2024-12-10', foto: '/img/banner1.jpg',
-    redaksi: 'Kegiatan bakti sosial yang diadakan oleh HIMMAH NW Komisariat STMIK...',
     kategori: 'Sosial',
+    paragraf: [
+      { judulParagraf: 'Pembukaan', isiParagraf: 'Kegiatan bakti sosial yang diadakan oleh HIMMAH NW Komisariat STMIK berlangsung sukses di Desa Sembalun. Puluhan mahasiswa turun langsung membantu masyarakat...' },
+      { judulParagraf: 'Rangkaian Acara', isiParagraf: 'Acara dimulai dengan apel pagi, kemudian pembagian sembako, pengobatan gratis, dan diakhiri dengan ramah tamah bersama warga.' }
+    ]
   },
   {
     id: 2, judul: 'Seminar Nasional Teknologi 4.0 Bersama Pakar IT',
     tanggal: '2024-11-25', foto: '/img/banner2.jpg',
-    redaksi: 'Bertempat di Aula Kampus STMIK...',
     kategori: 'Pendidikan',
+    paragraf: [{ judulParagraf: 'Pembukaan', isiParagraf: 'Bertempat di Aula Kampus STMIK, seminar nasional ini menghadirkan pakar IT dari berbagai instansi...' }]
   },
   {
     id: 3, judul: 'Pelantikan Pengurus Baru HIMMAH NW Periode 2024-2025',
     tanggal: '2024-11-01', foto: '/img/banner3.jpg',
-    redaksi: 'Prosesi pelantikan pengurus baru berjalan khidmat...',
     kategori: 'Organisasi',
+    paragraf: [{ judulParagraf: 'Prosesi Pelantikan', isiParagraf: 'Prosesi pelantikan pengurus baru berjalan khidmat, dihadiri oleh jajaran dewan pembina dan seluruh anggota...' }]
   },
 ];
 
@@ -65,37 +68,35 @@ export function AppProvider({ children }) {
   const DATA_BLOB_URL = 'https://trwurgahpjquoqvn.public.blob.vercel-storage.com/data.json';
   const LOCAL_KEY = 'himmah_data';
 
-  // Fungsi untuk mengisi state dari data (digunakan berulang)
   const applyData = (data) => {
     setBerita(data.berita || defaultBerita);
     setDivisi(data.divisi || defaultDivisi);
     setPengurus(data.pengurus || defaultPengurus);
     setBannerImages(data.bannerImages || []);
     setLogo(data.logo || null);
-    setIsLoggedIn(data.isLoggedIn || false);
+    // isLoggedIn TIDAK diambil dari data yang disimpan
   };
 
   useEffect(() => {
+    // 1. Cek flag login DULUAN sebelum load data
+    const loginFlag = localStorage.getItem('himmah_login');
+    if (loginFlag === 'true') {
+      setIsLoggedIn(true);
+    }
+
     const loadData = async () => {
-      // 1. Prioritas utama: localStorage
       const local = localStorage.getItem(LOCAL_KEY);
       if (local) {
         try {
           const parsed = JSON.parse(local);
           applyData(parsed);
           setDataLoaded(true);
-          // Latar belakang: sinkronkan dari Blob hanya jika localStorage kosong? 
-          // Kita bisa perbarui localStorage dengan data terbaru dari Blob secara diam-diam.
-          // Tapi jangan menimpa state lagi, cukup perbarui localStorage jika Blob lebih baru.
-          // Untuk memastikan Blob tetap sinkron, kita akan fetch Blob dan bandingkan.
-          // Jika Blob berbeda, perbarui localStorage (tapi jangan reset state agar UI tidak berubah tiba-tiba).
-          fetchBlobAndUpdateLocalSilently(parsed);
+          fetchBlobAndUpdateLocal(parsed);
         } catch (e) {
           console.warn('Gagal parse localStorage, lanjut ke Blob');
-          fetchBlobAsMain();
+          await fetchBlobAsMain();
         }
       } else {
-        // 2. Jika localStorage kosong, ambil dari Blob
         await fetchBlobAsMain();
       }
     };
@@ -105,8 +106,15 @@ export function AppProvider({ children }) {
         const res = await fetch(`${DATA_BLOB_URL}?t=${Date.now()}`);
         if (res.ok) {
           const json = await res.json();
+          if (json.berita) {
+            json.berita = json.berita.map(b => {
+              if (!b.paragraf && b.redaksi) {
+                return { ...b, paragraf: [{ judulParagraf: '', isiParagraf: b.redaksi }] };
+              }
+              return b;
+            });
+          }
           applyData(json);
-          // Simpan ke localStorage agar selanjutnya langsung dipakai
           localStorage.setItem(LOCAL_KEY, JSON.stringify(json));
         }
       } catch (err) {
@@ -115,79 +123,73 @@ export function AppProvider({ children }) {
       setDataLoaded(true);
     };
 
-    const fetchBlobAndUpdateLocalSilently = async (currentLocal) => {
+    const fetchBlobAndUpdateLocal = async (currentLocal) => {
       try {
         const res = await fetch(`${DATA_BLOB_URL}?t=${Date.now()}`);
         if (res.ok) {
           const json = await res.json();
-          // Jika Blob berbeda dengan localStorage, perbarui localStorage saja
+          if (json.berita) {
+            json.berita = json.berita.map(b => {
+              if (!b.paragraf && b.redaksi) {
+                return { ...b, paragraf: [{ judulParagraf: '', isiParagraf: b.redaksi }] };
+              }
+              return b;
+            });
+          }
           if (JSON.stringify(json) !== JSON.stringify(currentLocal)) {
             localStorage.setItem(LOCAL_KEY, JSON.stringify(json));
-            // Opsional: bisa juga update state, tapi jangan saat user sedang aktif
-            // Kita bisa meminta konfirmasi atau langsung update diam-diam.
-            // Untuk amannya, kita update state juga agar data terbaru tampil.
             applyData(json);
           }
         }
-      } catch (err) {
-        // silent
-      }
+      } catch (err) {}
     };
 
     loadData();
   }, []);
 
-  // Simpan data ke localStorage dan kirim ke Blob (background)
-  const saveAllData = async (newData) => {
-    // 1. Simpan ke localStorage (prioritas utama)
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(newData));
-    // 2. Kirim ke API untuk perbarui Blob (tidak menghalangi UI)
+  const saveAllData = async (data) => {
+    const { isLoggedIn: _, ...dataToSave } = data; // selalu hapus isLoggedIn dari data yang disimpan
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(dataToSave));
     try {
       await fetch('/api/save-data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newData),
+        body: JSON.stringify(dataToSave),
       });
-      console.log('Data tersimpan ke Blob');
     } catch (err) {
-      console.error('Gagal menyimpan ke Blob (data tetap aman di localStorage):', err);
+      console.error('Gagal menyimpan ke Blob:', err);
     }
   };
 
-  // Wrapper fungsi save – update state & panggil saveAllData
   const saveBerita = (data) => {
     setBerita(data);
-    saveAllData({ berita: data, divisi, pengurus, bannerImages, logo, isLoggedIn });
+    saveAllData({ berita: data, divisi, pengurus, bannerImages, logo });
   };
-
   const saveDivisi = (data) => {
     setDivisi(data);
-    saveAllData({ berita, divisi: data, pengurus, bannerImages, logo, isLoggedIn });
+    saveAllData({ berita, divisi: data, pengurus, bannerImages, logo });
   };
-
   const savePengurus = (data) => {
     setPengurus(data);
-    saveAllData({ berita, divisi, pengurus: data, bannerImages, logo, isLoggedIn });
+    saveAllData({ berita, divisi, pengurus: data, bannerImages, logo });
   };
-
   const saveBanner = (data) => {
     setBannerImages(data);
-    saveAllData({ berita, divisi, pengurus, bannerImages: data, logo, isLoggedIn });
+    saveAllData({ berita, divisi, pengurus, bannerImages: data, logo });
   };
-
   const saveLogo = (url) => {
     setLogo(url);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo: url, isLoggedIn });
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo: url });
   };
 
   const login = () => {
     setIsLoggedIn(true);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo, isLoggedIn: true });
+    localStorage.setItem('himmah_login', 'true');
   };
 
   const logout = () => {
     setIsLoggedIn(false);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo, isLoggedIn: false });
+    localStorage.removeItem('himmah_login');
   };
 
   if (!dataLoaded) {

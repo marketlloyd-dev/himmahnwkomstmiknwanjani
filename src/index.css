@@ -63,3 +63,25 @@ html {
 .animate-fadeIn {
   animation: fadeIn 0.6s ease-out forwards;
 }
+
+[contenteditable] {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: plaintext !important;
+}
+
+/* Paksa editor contentEditable selalu LTR */
+[contentEditable],
+[contentEditable] * {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: isolate !important;
+}
+
+/* Placeholder tetap di kiri */
+[contentEditable]:empty:before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  direction: ltr !important;
+  text-align: left !important;
+}

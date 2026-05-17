@@ -65,7 +65,6 @@ export default function Information() {
                     {person.jabatan}
                   </span>
                   <h3 className="text-white font-bold text-lg mt-2">{person.nama}</h3>
-                  <p className="text-green-300/70 text-sm">{person.jurusan}</p>
                 </div>
               </div>
             ))}

@@ -35,7 +35,7 @@ export default function Beranda() {
             HIMMAH NW
           </h1>
           <p className="text-xl sm:text-2xl text-green-200 font-light mb-6">
-            Komisariat STMIK
+            Komisariat STMIK SZ NW anjani
           </p>
           <p className="text-green-300/80 max-w-xl mx-auto text-sm sm:text-base mb-8">
             Himpunan Mahasiswa Nahdlatul Wathan — Wadah pergerakan, pengabdian, dan prestasi mahasiswa.

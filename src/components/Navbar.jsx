@@ -30,7 +30,7 @@ export default function Navbar() {
             />
             <div className="hidden sm:block">
               <p className="text-white font-poppins font-bold text-sm leading-tight">HIMMAH NW</p>
-              <p className="text-green-300 text-xs">Komisariat STMIK</p>
+              <p className="text-green-300 text-xs">Komisariat STMIK SZ NW Anjani</p>
             </div>
           </Link>
 
