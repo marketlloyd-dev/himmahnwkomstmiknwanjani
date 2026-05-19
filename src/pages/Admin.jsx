@@ -6,12 +6,11 @@ import {
   Newspaper, Users, Image, Palette, User, TrendingUp, Calendar,
   Tag, Bold, Italic, Underline, Strikethrough, Link, Quote,
   Heading1, Heading2, List, ListOrdered, ImagePlus, Search,
-  BookOpen, Shield, Menu, Clock, BarChart3
+  BookOpen, Shield, Menu, Clock, BarChart3, Key
 } from 'lucide-react';
 import SEO from '../components/SEO';
 import CropModal from '../components/CropModal';
 
-/* ---------- Konstanta & Helper ---------- */
 const IMGBB_API_KEY = import.meta.env.VITE_IMGBB_API_KEY;
 
 function fileToBase64(file) {
@@ -39,7 +38,6 @@ async function uploadImage(file) {
   return result.data.url;
 }
 
-/* ---------- Rich Text Editor (dengan indikator format aktif) ---------- */
 function RichTextEditor({ value, onChange, placeholder }) {
   const editorRef = useRef(null);
   const [showLinkInput, setShowLinkInput] = useState(false);
@@ -210,9 +208,6 @@ function RichTextEditor({ value, onChange, placeholder }) {
   );
 }
 
-/* ====================================================================== */
-/*                        KOMPONEN ADMIN UTAMA                            */
-/* ====================================================================== */
 export default function Admin() {
   const {
     isLoggedIn, login, logout,
@@ -223,9 +218,11 @@ export default function Admin() {
     pengurus, savePengurus,
     countdownEvent, saveCountdownEvent, removeCountdownEvent,
     poll, savePoll, removePoll,
+    anggotaList, saveAnggotaList,
+    beritaInternal, saveBeritaInternal,
+    inviteCode, saveInviteCode,
   } = useApp();
 
-  /* --- State Global --- */
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -233,7 +230,6 @@ export default function Admin() {
   const [isUploading, setIsUploading] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
-  /* --- State Crop Universal --- */
   const [cropModal, setCropModal] = useState({
     open: false,
     imageSrc: '',
@@ -242,7 +238,6 @@ export default function Admin() {
     cropShape: 'rect',
   });
 
-  /* --- State Berita --- */
   const [beritaForm, setBeritaForm] = useState({
     judul: '', tanggal: '', kategori: '', fotoFile: null, kontenHTML: '',
   });
@@ -252,21 +247,17 @@ export default function Admin() {
   const [filterKategori, setFilterKategori] = useState('');
   const [filterTanggal, setFilterTanggal] = useState('');
 
-  /* --- State Divisi --- */
   const [divisiForm, setDivisiForm] = useState({
     nama: '', programKerja: '', anggota: [{ nama: '', jabatan: 'Anggota', foto: '' }],
   });
   const [editDivisiId, setEditDivisiId] = useState(null);
 
-  /* --- State Banner --- */
   const [bannerFile, setBannerFile] = useState(null);
   const [bannerAlt, setBannerAlt] = useState('');
 
-  /* --- State Logo --- */
   const [previewLogo, setPreviewLogo] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
 
-  /* --- State Pengurus --- */
   const [pengurusForm, setPengurusForm] = useState({
     ketua: { nama: '', fotoFile: null },
     sekretaris: { nama: '', fotoFile: null },
@@ -276,25 +267,21 @@ export default function Admin() {
     ketua: null, sekretaris: null, bendahara: null,
   });
 
-  /* --- State Sejarah --- */
   const [sejarahForm, setSejarahForm] = useState({
     tahunBerdiri: dataKomisariat.tahunBerdiri,
     deskripsi: dataKomisariat.deskripsi,
   });
 
-  /* --- State Manajemen Admin --- */
   const [adminAccountsState, setAdminAccountsState] = useState(() => {
     const saved = localStorage.getItem('himmah_admin_accounts');
     return saved ? JSON.parse(saved) : adminAccounts;
   });
   const [newAdmin, setNewAdmin] = useState({ username: '', password: '' });
 
-  /* --- State Countdown --- */
   const [countdownForm, setCountdownForm] = useState({
     title: '', description: '', targetDate: '',
   });
 
-  /* --- State Polling --- */
   const [pollForm, setPollForm] = useState({
     question: '',
     options: [
@@ -303,7 +290,18 @@ export default function Admin() {
     ],
   });
 
-  /* --- Riwayat Aktivitas --- */
+  const [anggotaForm, setAnggotaForm] = useState({
+    nim: '', nama: '', password: '', jurusan: '', angkatan: '', divisi: '', foto: ''
+  });
+  const [editAnggotaNim, setEditAnggotaNim] = useState(null);
+
+  const [beritaInternalForm, setBeritaInternalForm] = useState({
+    judul: '', isi: '', tanggal: ''
+  });
+  const [editBeritaInternalId, setEditBeritaInternalId] = useState(null);
+
+  const [inviteCodeForm, setInviteCodeForm] = useState(inviteCode);
+
   const [activityLog, setActivityLog] = useState(() => {
     const saved = localStorage.getItem('himmah_activity_log');
     return saved ? JSON.parse(saved) : [];
@@ -319,7 +317,6 @@ export default function Admin() {
     localStorage.setItem('himmah_activity_log', JSON.stringify(updated));
   };
 
-  /* ---------- Login ---------- */
   const handleLogin = (e) => {
     e.preventDefault();
     const found = adminAccountsState.find(
@@ -363,9 +360,6 @@ export default function Admin() {
     );
   }
 
-  /* ======================== FUNGSI CRUD ======================== */
-
-  /* ---------- Berita ---------- */
   const handleBeritaSubmit = async (e) => {
     e.preventDefault();
     if (!beritaForm.judul || !beritaForm.kontenHTML) return;
@@ -424,7 +418,6 @@ export default function Admin() {
     return matchSearch && matchKategori && matchTanggal;
   });
 
-  /* ---------- Divisi ---------- */
   const handleDivisiSubmit = (e) => {
     e.preventDefault();
     const newDivisi = {
@@ -462,7 +455,6 @@ export default function Admin() {
     }
   };
 
-  /* ---------- Banner ---------- */
   const handleBannerSubmit = async (e) => {
     e.preventDefault();
     if (!bannerFile) return;
@@ -480,7 +472,6 @@ export default function Admin() {
     logActivity('Menghapus banner');
   };
 
-  /* ---------- Logo ---------- */
   const handleSaveLogo = async () => {
     if (!logoFile) return;
     setIsUploading(true);
@@ -500,7 +491,6 @@ export default function Admin() {
     }
   };
 
-  /* ---------- Pengurus ---------- */
   const loadPengurusToForm = () => {
     if (pengurus) {
       setPengurusForm({
@@ -535,7 +525,6 @@ export default function Admin() {
     setIsUploading(false);
   };
 
-  /* ---------- Handler crop khusus untuk masing-masing jenis gambar ---------- */
   const handlePengurusFileChange = (role, file) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -626,23 +615,19 @@ export default function Admin() {
             const updatedAnggota = [...divisiForm.anggota];
             updatedAnggota[index] = { ...updatedAnggota[index], foto: url };
             setDivisiForm({ ...divisiForm, anggota: updatedAnggota });
-          } catch (err) {
-            alert('Gagal upload foto: ' + err.message);
-          }
+          } catch (err) { alert('Gagal upload foto: ' + err.message); }
         },
       });
     };
     reader.readAsDataURL(file);
   };
 
-  /* ---------- Sejarah ---------- */
   const handleSaveSejarah = () => {
     localStorage.setItem('himmah_sejarah', JSON.stringify(sejarahForm));
     logActivity('Mengubah data sejarah');
     alert('Sejarah berhasil diperbarui!');
   };
 
-  /* ---------- Manajemen Admin ---------- */
   const handleAddAdmin = () => {
     if (!newAdmin.username || !newAdmin.password) return;
     const updated = [...adminAccountsState, { ...newAdmin }];
@@ -660,7 +645,6 @@ export default function Admin() {
     logActivity(`Menghapus admin "${removed.username}"`);
   };
 
-  /* ---------- Countdown ---------- */
   const handleSaveCountdown = () => {
     if (!countdownForm.targetDate) return;
     saveCountdownEvent(countdownForm);
@@ -675,7 +659,6 @@ export default function Admin() {
     }
   };
 
-  /* ---------- Polling ---------- */
   const addOption = () => setPollForm({ ...pollForm, options: [...pollForm.options, { text: '', votes: 0 }] });
   const removeOption = (index) => {
     if (pollForm.options.length <= 2) return;
@@ -703,7 +686,53 @@ export default function Admin() {
     }
   };
 
-  /* ---------- Navigasi Tab ---------- */
+  const handleAnggotaSubmit = (e) => {
+    e.preventDefault();
+    if (!anggotaForm.nim || !anggotaForm.nama || !anggotaForm.password) return;
+    if (editAnggotaNim) {
+      saveAnggotaList(anggotaList.map(a => a.nim === editAnggotaNim ? anggotaForm : a));
+      setEditAnggotaNim(null);
+      logActivity(`Mengedit anggota ${anggotaForm.nama}`);
+    } else {
+      saveAnggotaList([...anggotaList, anggotaForm]);
+      logActivity(`Menambah anggota ${anggotaForm.nama}`);
+    }
+    setAnggotaForm({ nim: '', nama: '', password: '', jurusan: '', angkatan: '', divisi: '', foto: '' });
+  };
+  const handleDeleteAnggota = (nim) => {
+    if (window.confirm('Hapus anggota ini?')) {
+      saveAnggotaList(anggotaList.filter(a => a.nim !== nim));
+      logActivity(`Menghapus anggota dengan NIM ${nim}`);
+    }
+  };
+
+  const handleBeritaInternalSubmit = (e) => {
+    e.preventDefault();
+    if (!beritaInternalForm.judul || !beritaInternalForm.isi) return;
+    const newBerita = { ...beritaInternalForm, id: editBeritaInternalId || Date.now() };
+    if (editBeritaInternalId) {
+      saveBeritaInternal(beritaInternal.map(b => b.id === editBeritaInternalId ? newBerita : b));
+      setEditBeritaInternalId(null);
+      logActivity('Mengedit berita internal');
+    } else {
+      saveBeritaInternal([newBerita, ...beritaInternal]);
+      logActivity('Menambah berita internal');
+    }
+    setBeritaInternalForm({ judul: '', isi: '', tanggal: '' });
+  };
+  const handleDeleteBeritaInternal = (id) => {
+    if (window.confirm('Hapus berita internal ini?')) {
+      saveBeritaInternal(beritaInternal.filter(b => b.id !== id));
+      logActivity('Menghapus berita internal');
+    }
+  };
+
+  const handleSaveInviteCode = () => {
+    saveInviteCode(inviteCodeForm);
+    logActivity('Mengubah kode undangan');
+    alert('Kode undangan berhasil disimpan!');
+  };
+
   const tabs = [
     { key: 'dashboard', label: 'Dashboard', icon: <TrendingUp size={16} /> },
     { key: 'berita', label: 'Berita', icon: <Newspaper size={16} /> },
@@ -713,14 +742,19 @@ export default function Admin() {
     { key: 'pengurus', label: 'Pengurus', icon: <User size={16} /> },
     { key: 'sejarah', label: 'Sejarah', icon: <BookOpen size={16} /> },
     { key: 'adminMgmt', label: 'Admin', icon: <Shield size={16} /> },
+    { key: 'anggotaMgmt', label: 'Anggota', icon: <User size={16} /> },
+    { key: 'beritaInternal', label: 'Internal', icon: <Newspaper size={16} /> },
+    { key: 'invite', label: 'Undangan', icon: <Key size={16} /> },
     { key: 'countdown', label: 'Countdown', icon: <Clock size={16} /> },
     { key: 'polling', label: 'Polling', icon: <BarChart3 size={16} /> },
   ];
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     if (tab === 'pengurus') loadPengurusToForm();
     if (tab === 'countdown' && countdownEvent) setCountdownForm(countdownEvent);
     if (tab === 'polling' && poll) setPollForm(poll);
+    if (tab === 'invite') setInviteCodeForm(inviteCode);
   };
 
   const totalBerita = berita.length;
@@ -728,12 +762,10 @@ export default function Admin() {
   const totalBanner = bannerImages.length;
   const beritaTerbaru = berita.slice(0, 5);
 
-  /* ======================== RENDER UTAMA ======================== */
   return (
     <>
       <SEO title="Panel Admin" description="Panel administrasi HIMMAH NW Komisariat STMIK." />
       <div className="min-h-screen bg-[#0a0f0a]">
-        {/* Crop Modal */}
         <CropModal
           open={cropModal.open}
           onClose={() => setCropModal({ ...cropModal, open: false })}
@@ -743,13 +775,10 @@ export default function Admin() {
           onCropComplete={cropModal.onCropComplete}
         />
 
-        {/* Sidebar + Main */}
         <div className="flex min-h-screen">
-          {/* Overlay mobile */}
           {isSidebarOpen && (
             <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
           )}
-          {/* Sidebar */}
           <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0d1a0d] border-r border-green-900/30 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
             <div className="flex flex-col h-full">
               <div className="p-6 border-b border-green-900/30 flex items-center justify-between">
@@ -773,7 +802,6 @@ export default function Admin() {
             </div>
           </aside>
 
-          {/* Main */}
           <div className="flex-1 flex flex-col min-w-0">
             <header className="bg-[#0d1a0d] border-b border-green-900/30 px-4 sm:px-6 py-4 flex items-center justify-between lg:hidden">
               <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg text-white hover:bg-white/10"><Menu size={24} /></button>
@@ -782,7 +810,6 @@ export default function Admin() {
             </header>
 
             <main className="flex-1 p-4 sm:p-6 lg:p-8">
-              {/* Dashboard */}
               {activeTab === 'dashboard' && (
                 <div className="space-y-6">
                   <div><h2 className="text-2xl font-playfair font-bold text-white">Dashboard</h2><p className="text-gray-400 text-sm mt-1">Selamat datang di panel admin HIMMAH NW Komisariat STMIK</p></div>
@@ -792,16 +819,14 @@ export default function Admin() {
                     <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-5"><div className="flex items-center justify-between"><div><p className="text-gray-400 text-sm">Total Banner</p><p className="text-white text-3xl font-bold mt-1">{totalBanner}</p></div><div className="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center"><Image size={24} className="text-orange-400" /></div></div></div>
                     <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-5"><div className="flex items-center justify-between"><div><p className="text-gray-400 text-sm">Logo Aktif</p><p className="text-white text-3xl font-bold mt-1">{logo ? '1' : '0'}</p></div><div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center"><Palette size={24} className="text-green-400" /></div></div></div>
                   </div>
-
                   <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-6">
                     <h3 className="text-white font-bold text-lg mb-4">💾 Backup & Restore Data</h3>
                     <p className="text-gray-400 text-sm mb-4">Download semua data sebagai file JSON untuk backup, atau upload file backup untuk restore.</p>
                     <div className="flex gap-3 flex-wrap">
-                      <button onClick={() => { const data = { berita, divisi, pengurus, bannerImages, logo, countdownEvent, poll }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `backup-himmah-${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url); }} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium">📥 Download Backup</button>
-                      <label className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-medium cursor-pointer">📤 Restore Backup <input type="file" accept=".json" onChange={async (e) => { const file = e.target.files[0]; if (!file) return; if (!window.confirm('Yakin ingin merestore data?')) return; try { const text = await file.text(); const data = JSON.parse(text); saveBerita(data.berita || []); saveDivisi(data.divisi || []); savePengurus(data.pengurus || defaultPengurus); saveBanner(data.bannerImages || []); saveLogo(data.logo || null); if (data.countdownEvent) saveCountdownEvent(data.countdownEvent); if (data.poll) savePoll(data.poll); alert('Restore berhasil!'); } catch (err) { alert('Gagal restore: ' + err.message); } }} className="hidden" /></label>
+                      <button onClick={() => { const data = { berita, divisi, pengurus, bannerImages, logo, countdownEvent, poll, anggotaList, beritaInternal, inviteCode }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `backup-himmah-${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url); }} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium">📥 Download Backup</button>
+                      <label className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-medium cursor-pointer">📤 Restore Backup <input type="file" accept=".json" onChange={async (e) => { const file = e.target.files[0]; if (!file) return; if (!window.confirm('Yakin ingin merestore data?')) return; try { const text = await file.text(); const data = JSON.parse(text); saveBerita(data.berita || []); saveDivisi(data.divisi || []); savePengurus(data.pengurus || defaultPengurus); saveBanner(data.bannerImages || []); saveLogo(data.logo || null); if (data.countdownEvent) saveCountdownEvent(data.countdownEvent); if (data.poll) savePoll(data.poll); if (data.anggotaList) saveAnggotaList(data.anggotaList); if (data.beritaInternal) saveBeritaInternal(data.beritaInternal); if (data.inviteCode) saveInviteCode(data.inviteCode); alert('Restore berhasil!'); } catch (err) { alert('Gagal restore: ' + err.message); } }} className="hidden" /></label>
                     </div>
                   </div>
-
                   <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-4"><h3 className="text-white font-bold text-lg">Berita Terbaru</h3><button onClick={() => handleTabChange('berita')} className="text-green-400 text-sm hover:underline">Lihat Semua</button></div>
                     <div className="space-y-3">
@@ -816,7 +841,6 @@ export default function Admin() {
                       ))}
                     </div>
                   </div>
-
                   <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-6">
                     <h3 className="text-white font-bold text-lg mb-4">📋 Riwayat Aktivitas</h3>
                     {activityLog.length === 0 ? <p className="text-gray-400 text-sm">Belum ada aktivitas.</p> : (
@@ -834,21 +858,18 @@ export default function Admin() {
                 </div>
               )}
 
-              {/* Berita */}
               {activeTab === 'berita' && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div><h2 className="text-2xl font-playfair font-bold text-white">Manajemen Berita</h2><p className="text-gray-400 text-sm mt-1">Kelola semua berita dan publikasi</p></div>
                     <button onClick={() => { setEditBeritaId(null); setBeritaForm({ judul: '', tanggal: '', kategori: '', fotoFile: null, kontenHTML: '' }); setActiveTab('berita'); }} className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl flex items-center gap-2 text-sm font-medium"><Plus size={16} /> Tulis Berita</button>
                   </div>
-
                   <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-4 flex flex-wrap items-center gap-3">
                     <div className="flex items-center gap-2 flex-1 min-w-[200px]"><Search size={18} className="text-gray-400" /><input type="text" placeholder="Cari judul berita..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-transparent text-white text-sm w-full focus:outline-none" /></div>
                     <input type="text" placeholder="Filter kategori..." value={filterKategori} onChange={(e) => setFilterKategori(e.target.value)} className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm w-40" />
                     <input type="date" value={filterTanggal} onChange={(e) => setFilterTanggal(e.target.value)} className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm" />
                     <button onClick={() => { setSearchQuery(''); setFilterKategori(''); setFilterTanggal(''); }} className="px-3 py-2 bg-gray-500/30 text-white rounded-lg text-sm">Reset</button>
                   </div>
-
                   <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-6">
                     <h3 className="text-white font-bold text-lg mb-4">{editBeritaId ? '✏️ Edit Berita' : '📝 Tulis Berita Baru'}</h3>
                     <form onSubmit={handleBeritaSubmit} className="space-y-4">
@@ -868,18 +889,13 @@ export default function Admin() {
                       </div>
                     </form>
                   </div>
-
                   <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-6">
                     <h3 className="text-white font-bold text-lg mb-4">📋 Semua Berita ({filteredBerita.length})</h3>
                     {filteredBerita.length === 0 ? <p className="text-gray-400 text-sm">Tidak ada berita.</p> : (
                       <div className="space-y-3">
                         {filteredBerita.map((item, index) => (
                           <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
-                            <div className="flex items-center gap-4">
-                              <span className="text-2xl font-bold text-green-400/40 w-8 flex-shrink-0">{index + 1}</span>
-                              {item.foto && <img src={item.foto} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />}
-                              <div><p className="text-white font-medium line-clamp-1">{item.judul}</p><div className="flex items-center gap-3 text-xs text-gray-400 mt-1"><span className="flex items-center gap-1"><Calendar size={12} /> {item.tanggal}</span>{item.kategori && <span className="flex items-center gap-1"><Tag size={12} /> {item.kategori}</span>}</div></div>
-                            </div>
+                            <div className="flex items-center gap-4"><span className="text-2xl font-bold text-green-400/40 w-8 flex-shrink-0">{index + 1}</span>{item.foto && <img src={item.foto} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />}<div><p className="text-white font-medium line-clamp-1">{item.judul}</p><div className="flex items-center gap-3 text-xs text-gray-400 mt-1"><span className="flex items-center gap-1"><Calendar size={12} /> {item.tanggal}</span>{item.kategori && <span className="flex items-center gap-1"><Tag size={12} /> {item.kategori}</span>}</div></div></div>
                             <div className="flex gap-2 self-end sm:self-auto"><button onClick={() => handleEditBerita(item)} className="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20"><Edit3 size={14} /></button><button onClick={() => handleDeleteBerita(item.id)} className="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20"><Trash2 size={14} /></button></div>
                           </div>
                         ))}
@@ -889,7 +905,6 @@ export default function Admin() {
                 </div>
               )}
 
-              {/* Divisi */}
               {activeTab === 'divisi' && (
                 <div className="space-y-6">
                   <div><h2 className="text-2xl font-playfair font-bold text-white">Manajemen Divisi</h2><p className="text-gray-400 text-sm mt-1">Kelola divisi, program kerja, dan anggota</p></div>
@@ -909,8 +924,7 @@ export default function Admin() {
                               <div className="flex-shrink-0">
                                 <img src={anggota.foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(anggota.nama || '?')}&background=004d24&color=fff&size=50`} alt={anggota.nama} className="w-12 h-12 rounded-full object-cover border border-green-400/30" />
                                 <label className="block text-green-400/60 text-xs mt-1 text-center cursor-pointer hover:text-green-300">
-                                  <input type="file" accept="image/*" onChange={(e) => { const file = e.target.files[0]; if (file) handleAnggotaFileChange(index, file); }} className="hidden" />
-                                  📷
+                                  <input type="file" accept="image/*" onChange={(e) => { const file = e.target.files[0]; if (file) handleAnggotaFileChange(index, file); }} className="hidden" /> 📷
                                 </label>
                               </div>
                               <div className="flex-1 space-y-2 w-full">
@@ -944,16 +958,13 @@ export default function Admin() {
                 </div>
               )}
 
-              {/* Banner */}
               {activeTab === 'banner' && (
                 <div className="space-y-6">
                   <div><h2 className="text-2xl font-playfair font-bold text-white">Manajemen Banner</h2><p className="text-gray-400 text-sm mt-1">Kelola banner slider di beranda</p></div>
                   <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-6">
                     <h3 className="text-white font-bold text-lg mb-4">➕ Tambah Banner</h3>
                     <form onSubmit={handleBannerSubmit} className="space-y-4">
-                      <div><label className="text-gray-400 text-xs mb-1 block">File Gambar</label>
-                        <input type="file" accept="image/*" onChange={(e) => { const file = e.target.files[0]; if (file) handleBannerFileChange(file); }} className="w-full text-sm text-white file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-green-500 file:text-white" required />
-                      </div>
+                      <div><label className="text-gray-400 text-xs mb-1 block">File Gambar</label><input type="file" accept="image/*" onChange={(e) => { const file = e.target.files[0]; if (file) handleBannerFileChange(file); }} className="w-full text-sm text-white file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-green-500 file:text-white" required /></div>
                       <input type="text" placeholder="Deskripsi Banner" value={bannerAlt} onChange={(e) => setBannerAlt(e.target.value)} className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-400" required />
                       <button type="submit" disabled={isUploading} className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50">{isUploading ? 'Mengunggah...' : <><Plus size={16} /> Tambah Banner</>}</button>
                     </form>
@@ -974,7 +985,6 @@ export default function Admin() {
                 </div>
               )}
 
-              {/* Logo */}
               {activeTab === 'logo' && (
                 <div className="space-y-6">
                   <div><h2 className="text-2xl font-playfair font-bold text-white">Pengaturan Logo</h2><p className="text-gray-400 text-sm mt-1">Atur logo yang muncul di navbar dan header</p></div>
@@ -997,7 +1007,6 @@ export default function Admin() {
                 </div>
               )}
 
-              {/* Pengurus */}
               {activeTab === 'pengurus' && (
                 <div className="space-y-6">
                   <div><h2 className="text-2xl font-playfair font-bold text-white">Edit Pengurus Inti</h2><p className="text-gray-400 text-sm mt-1">Ubah nama dan foto Ketua, Sekretaris, Bendahara</p></div>
@@ -1020,7 +1029,6 @@ export default function Admin() {
                 </div>
               )}
 
-              {/* Sejarah */}
               {activeTab === 'sejarah' && (
                 <div className="space-y-6">
                   <div><h2 className="text-2xl font-playfair font-bold text-white">Edit Sejarah Komisariat</h2><p className="text-gray-400 text-sm mt-1">Ubah tahun berdiri dan deskripsi</p></div>
@@ -1032,7 +1040,6 @@ export default function Admin() {
                 </div>
               )}
 
-              {/* Admin Management */}
               {activeTab === 'adminMgmt' && (
                 <div className="space-y-6">
                   <div><h2 className="text-2xl font-playfair font-bold text-white">Manajemen Admin</h2><p className="text-gray-400 text-sm mt-1">Tambah atau hapus akun admin</p></div>
@@ -1057,7 +1064,90 @@ export default function Admin() {
                 </div>
               )}
 
-              {/* Countdown */}
+              {activeTab === 'anggotaMgmt' && (
+                <div className="space-y-6">
+                  <div><h2 className="text-2xl font-playfair font-bold text-white">Manajemen Anggota</h2><p className="text-gray-400 text-sm mt-1">Kelola data anggota untuk portal</p></div>
+                  <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-6">
+                    <h3 className="text-white font-bold text-lg mb-4">{editAnggotaNim ? '✏️ Edit Anggota' : '➕ Tambah Anggota'}</h3>
+                    <form onSubmit={handleAnggotaSubmit} className="space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <input type="text" placeholder="NIM" value={anggotaForm.nim} onChange={(e) => setAnggotaForm({ ...anggotaForm, nim: e.target.value })} className="px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white" required />
+                        <input type="text" placeholder="Nama" value={anggotaForm.nama} onChange={(e) => setAnggotaForm({ ...anggotaForm, nama: e.target.value })} className="px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white" required />
+                        <input type="password" placeholder="Password" value={anggotaForm.password} onChange={(e) => setAnggotaForm({ ...anggotaForm, password: e.target.value })} className="px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white" required />
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <input type="text" placeholder="Jurusan" value={anggotaForm.jurusan} onChange={(e) => setAnggotaForm({ ...anggotaForm, jurusan: e.target.value })} className="px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white" />
+                        <input type="text" placeholder="Angkatan" value={anggotaForm.angkatan} onChange={(e) => setAnggotaForm({ ...anggotaForm, angkatan: e.target.value })} className="px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white" />
+                        <input type="text" placeholder="Divisi" value={anggotaForm.divisi} onChange={(e) => setAnggotaForm({ ...anggotaForm, divisi: e.target.value })} className="px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white" />
+                      </div>
+                      <div className="flex gap-3">
+                        <button type="submit" className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl text-sm"><Save size={16} className="inline mr-1" /> {editAnggotaNim ? 'Update' : 'Simpan'}</button>
+                        {editAnggotaNim && <button type="button" onClick={() => { setEditAnggotaNim(null); setAnggotaForm({ nim: '', nama: '', password: '', jurusan: '', angkatan: '', divisi: '', foto: '' }); }} className="px-4 py-2 bg-gray-500/30 text-white rounded-xl text-sm"><X size={16} className="inline mr-1" /> Batal</button>}
+                      </div>
+                    </form>
+                  </div>
+                  <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-6">
+                    <h3 className="text-white font-bold text-lg mb-4">📋 Daftar Anggota ({anggotaList.length})</h3>
+                    <div className="space-y-2">
+                      {anggotaList.map((a) => (
+                        <div key={a.nim} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                          <div><p className="text-white text-sm font-medium">{a.nama}</p><p className="text-gray-400 text-xs">{a.nim} · {a.divisi || '-'}</p></div>
+                          <div className="flex gap-2">
+                            <button onClick={() => { setAnggotaForm(a); setEditAnggotaNim(a.nim); setActiveTab('anggotaMgmt'); }} className="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20"><Edit3 size={14} /></button>
+                            <button onClick={() => handleDeleteAnggota(a.nim)} className="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20"><Trash2 size={14} /></button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'beritaInternal' && (
+                <div className="space-y-6">
+                  <div><h2 className="text-2xl font-playfair font-bold text-white">Berita Internal</h2><p className="text-gray-400 text-sm mt-1">Kelola berita untuk anggota</p></div>
+                  <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-6">
+                    <h3 className="text-white font-bold text-lg mb-4">{editBeritaInternalId ? '✏️ Edit Berita' : '➕ Tambah Berita'}</h3>
+                    <form onSubmit={handleBeritaInternalSubmit} className="space-y-3">
+                      <input type="text" placeholder="Judul Berita" value={beritaInternalForm.judul} onChange={(e) => setBeritaInternalForm({ ...beritaInternalForm, judul: e.target.value })} className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white" required />
+                      <textarea placeholder="Isi Berita" value={beritaInternalForm.isi} onChange={(e) => setBeritaInternalForm({ ...beritaInternalForm, isi: e.target.value })} rows="5" className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white resize-none" required />
+                      <input type="date" value={beritaInternalForm.tanggal} onChange={(e) => setBeritaInternalForm({ ...beritaInternalForm, tanggal: e.target.value })} className="px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white" />
+                      <div className="flex gap-3">
+                        <button type="submit" className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl text-sm"><Save size={16} className="inline mr-1" /> {editBeritaInternalId ? 'Update' : 'Simpan'}</button>
+                        {editBeritaInternalId && <button type="button" onClick={() => { setEditBeritaInternalId(null); setBeritaInternalForm({ judul: '', isi: '', tanggal: '' }); }} className="px-4 py-2 bg-gray-500/30 text-white rounded-xl text-sm"><X size={16} className="inline mr-1" /> Batal</button>}
+                      </div>
+                    </form>
+                  </div>
+                  <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-6">
+                    <h3 className="text-white font-bold text-lg mb-4">📋 Daftar Berita Internal ({beritaInternal.length})</h3>
+                    <div className="space-y-2">
+                      {beritaInternal.map((b) => (
+                        <div key={b.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                          <div><p className="text-white text-sm font-medium">{b.judul}</p><p className="text-gray-400 text-xs">{b.tanggal}</p></div>
+                          <div className="flex gap-2">
+                            <button onClick={() => { setBeritaInternalForm(b); setEditBeritaInternalId(b.id); setActiveTab('beritaInternal'); }} className="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20"><Edit3 size={14} /></button>
+                            <button onClick={() => handleDeleteBeritaInternal(b.id)} className="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20"><Trash2 size={14} /></button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'invite' && (
+                <div className="space-y-6">
+                  <div><h2 className="text-2xl font-playfair font-bold text-white">Kode Undangan Anggota</h2><p className="text-gray-400 text-sm mt-1">Atur kode rahasia untuk pendaftaran anggota baru</p></div>
+                  <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-6 space-y-4">
+                    <div>
+                      <label className="text-gray-400 text-xs mb-1 block">Kode Undangan</label>
+                      <input type="text" value={inviteCodeForm} onChange={(e) => setInviteCodeForm(e.target.value)} className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white" placeholder="Masukkan kode undangan" />
+                    </div>
+                    <button onClick={handleSaveInviteCode} className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl text-sm font-medium"><Save size={16} className="inline mr-1" /> Simpan Kode</button>
+                  </div>
+                </div>
+              )}
+
               {activeTab === 'countdown' && (
                 <div className="space-y-6">
                   <div><h2 className="text-2xl font-playfair font-bold text-white">Countdown Acara</h2><p className="text-gray-400 text-sm mt-1">Atur hitung mundur ke acara besar</p></div>
@@ -1073,7 +1163,6 @@ export default function Admin() {
                 </div>
               )}
 
-              {/* Polling */}
               {activeTab === 'polling' && (
                 <div className="space-y-6">
                   <div><h2 className="text-2xl font-playfair font-bold text-white">Jajak Pendapat</h2><p className="text-gray-400 text-sm mt-1">Buat polling untuk pengunjung</p></div>

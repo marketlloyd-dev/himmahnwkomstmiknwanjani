@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
-// Data default (fallback) — anggota divisi sekarang berupa objek
 const defaultPengurus = {
   ketua: { nama: 'Ketua', foto: '/img/ketua.jpg', nim: '-', jurusan: '-', angkatan: '-' },
   sekretaris: { nama: 'Sekretaris', foto: '/img/sekretaris.jpg', nim: '-', jurusan: '-', angkatan: '-' },
@@ -60,21 +59,21 @@ const defaultBerita = [
     tanggal: '2024-12-10', foto: '/img/banner1.jpg',
     kategori: 'Sosial',
     paragraf: [
-      { judulParagraf: 'Pembukaan', isiParagraf: 'Kegiatan bakti sosial yang diadakan oleh HIMMAH NW Komisariat STMIK berlangsung sukses di Desa Sembalun. Puluhan mahasiswa turun langsung membantu masyarakat...' },
-      { judulParagraf: 'Rangkaian Acara', isiParagraf: 'Acara dimulai dengan apel pagi, kemudian pembagian sembako, pengobatan gratis, dan diakhiri dengan ramah tamah bersama warga.' }
+      { judulParagraf: 'Pembukaan', isiParagraf: 'Kegiatan bakti sosial...' },
+      { judulParagraf: 'Rangkaian Acara', isiParagraf: 'Acara dimulai dengan apel pagi...' }
     ]
   },
   {
     id: 2, judul: 'Seminar Nasional Teknologi 4.0 Bersama Pakar IT',
     tanggal: '2024-11-25', foto: '/img/banner2.jpg',
     kategori: 'Pendidikan',
-    paragraf: [{ judulParagraf: 'Pembukaan', isiParagraf: 'Bertempat di Aula Kampus STMIK, seminar nasional ini menghadirkan pakar IT dari berbagai instansi...' }]
+    paragraf: [{ judulParagraf: 'Pembukaan', isiParagraf: 'Bertempat di Aula Kampus STMIK...' }]
   },
   {
     id: 3, judul: 'Pelantikan Pengurus Baru HIMMAH NW Periode 2024-2025',
     tanggal: '2024-11-01', foto: '/img/banner3.jpg',
     kategori: 'Organisasi',
-    paragraf: [{ judulParagraf: 'Prosesi Pelantikan', isiParagraf: 'Prosesi pelantikan pengurus baru berjalan khidmat, dihadiri oleh jajaran dewan pembina dan seluruh anggota...' }]
+    paragraf: [{ judulParagraf: 'Prosesi Pelantikan', isiParagraf: 'Prosesi pelantikan pengurus baru...' }]
   },
 ];
 
@@ -91,41 +90,17 @@ export function AppProvider({ children }) {
   const [likes, setLikes] = useState({});
   const [countdownEvent, setCountdownEvent] = useState(null);
   const [poll, setPoll] = useState(null);
+  const [anggotaList, setAnggotaList] = useState([]);
+  const [beritaInternal, setBeritaInternal] = useState([]);
+  const [inviteCode, setInviteCode] = useState('HIMMAH2024');
   const [dataLoaded, setDataLoaded] = useState(false);
 
   const DATA_BLOB_URL = 'https://trwurgahpjquoqvn.public.blob.vercel-storage.com/data.json';
   const LOCAL_KEY = 'himmah_data';
 
-  // ---------- Fungsi migrasi data lama ----------
-  const migrateDivisi = (data) => {
-    if (!data || !Array.isArray(data)) return defaultDivisi;
-    return data.map((d) => ({
-      ...d,
-      anggota: d.anggota.map((a) =>
-        typeof a === 'string'
-          ? {
-              nama: a.replace(/\s*\(Kadiv\).*/, '').trim(),
-              jabatan: a.includes('(Kadiv)') ? 'Kadiv' : 'Anggota',
-              foto: '',
-            }
-          : a
-      ),
-    }));
-  };
-
-  const migrateBerita = (data) => {
-    if (!data || !Array.isArray(data)) return defaultBerita;
-    return data.map((b) => {
-      if (!b.paragraf && b.redaksi) {
-        return { ...b, paragraf: [{ judulParagraf: '', isiParagraf: b.redaksi }] };
-      }
-      return b;
-    });
-  };
-
   const applyData = (data) => {
-    setBerita(migrateBerita(data.berita));
-    setDivisi(migrateDivisi(data.divisi));
+    setBerita(data.berita || defaultBerita);
+    setDivisi(data.divisi || defaultDivisi);
     setPengurus(data.pengurus || defaultPengurus);
     setBannerImages(data.bannerImages || []);
     setLogo(data.logo || null);
@@ -133,6 +108,9 @@ export function AppProvider({ children }) {
     setLikes(data.likes || {});
     if (data.countdownEvent) setCountdownEvent(data.countdownEvent);
     if (data.poll) setPoll(data.poll);
+    setAnggotaList(data.anggotaList || []);
+    setBeritaInternal(data.beritaInternal || []);
+    setInviteCode(data.inviteCode || 'HIMMAH2024');
   };
 
   useEffect(() => {
@@ -146,7 +124,6 @@ export function AppProvider({ children }) {
           const parsed = JSON.parse(local);
           applyData(parsed);
           setDataLoaded(true);
-          fetchBlobAndUpdateLocal(parsed);
         } catch (e) {
           console.warn('Gagal parse localStorage, lanjut ke Blob');
           await fetchBlobAsMain();
@@ -170,25 +147,9 @@ export function AppProvider({ children }) {
       setDataLoaded(true);
     };
 
-    const fetchBlobAndUpdateLocal = async (currentLocal) => {
-      try {
-        const res = await fetch(`${DATA_BLOB_URL}?t=${Date.now()}`);
-        if (res.ok) {
-          const json = await res.json();
-          if (JSON.stringify(json) !== JSON.stringify(currentLocal)) {
-            localStorage.setItem(LOCAL_KEY, JSON.stringify(json));
-            applyData(json);
-          }
-        }
-      } catch (err) {
-        // silent
-      }
-    };
-
     loadData();
   }, []);
 
-  // ---------- Simpan data ke localStorage + Blob ----------
   const saveAllData = async (data) => {
     const { isLoggedIn: _, ...dataToSave } = data;
     localStorage.setItem(LOCAL_KEY, JSON.stringify(dataToSave));
@@ -205,65 +166,67 @@ export function AppProvider({ children }) {
 
   const saveBerita = (data) => {
     setBerita(data);
-    saveAllData({ berita: data, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll });
+    saveAllData({ berita: data, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode });
   };
   const saveDivisi = (data) => {
     setDivisi(data);
-    saveAllData({ berita, divisi: data, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll });
+    saveAllData({ berita, divisi: data, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode });
   };
   const savePengurus = (data) => {
     setPengurus(data);
-    saveAllData({ berita, divisi, pengurus: data, bannerImages, logo, komentar, likes, countdownEvent, poll });
+    saveAllData({ berita, divisi, pengurus: data, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode });
   };
   const saveBanner = (data) => {
     setBannerImages(data);
-    saveAllData({ berita, divisi, pengurus, bannerImages: data, logo, komentar, likes, countdownEvent, poll });
+    saveAllData({ berita, divisi, pengurus, bannerImages: data, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode });
   };
   const saveLogo = (url) => {
     setLogo(url);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo: url, komentar, likes, countdownEvent, poll });
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo: url, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode });
   };
-
   const saveKomentarBaru = (beritaId, data, replace = false) => {
-    const updatedKomentar = {
-      ...komentar,
-      [beritaId]: replace ? data : [...(komentar[beritaId] || []), data],
-    };
+    const updatedKomentar = { ...komentar, [beritaId]: replace ? data : [...(komentar[beritaId] || []), data] };
     setKomentar(updatedKomentar);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar: updatedKomentar, likes, countdownEvent, poll });
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar: updatedKomentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode });
   };
-
   const toggleLike = (beritaId) => {
     const updated = { ...likes, [beritaId]: (likes[beritaId] || 0) + 1 };
     setLikes(updated);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes: updated, countdownEvent, poll });
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes: updated, countdownEvent, poll, anggotaList, beritaInternal, inviteCode });
   };
-
   const saveCountdownEvent = (event) => {
     setCountdownEvent(event);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent: event, poll });
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent: event, poll, anggotaList, beritaInternal, inviteCode });
   };
-
   const removeCountdownEvent = () => {
     setCountdownEvent(null);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent: null, poll });
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent: null, poll, anggotaList, beritaInternal, inviteCode });
   };
-
   const savePoll = (newPoll) => {
     setPoll(newPoll);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll: newPoll });
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll: newPoll, anggotaList, beritaInternal, inviteCode });
   };
-
   const removePoll = () => {
     setPoll(null);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll: null });
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll: null, anggotaList, beritaInternal, inviteCode });
+  };
+  const saveAnggotaList = (data) => {
+    setAnggotaList(data);
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList: data, beritaInternal, inviteCode });
+  };
+  const saveBeritaInternal = (data) => {
+    setBeritaInternal(data);
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal: data, inviteCode });
+  };
+  const saveInviteCode = (code) => {
+    setInviteCode(code);
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode: code });
   };
 
   const login = () => {
     setIsLoggedIn(true);
     localStorage.setItem('himmah_login', 'true');
   };
-
   const logout = () => {
     setIsLoggedIn(false);
     localStorage.removeItem('himmah_login');
@@ -290,6 +253,9 @@ export function AppProvider({ children }) {
         likes, toggleLike,
         countdownEvent, saveCountdownEvent, removeCountdownEvent,
         poll, savePoll, removePoll,
+        anggotaList, saveAnggotaList,
+        beritaInternal, saveBeritaInternal,
+        inviteCode, saveInviteCode,
       }}
     >
       {children}
