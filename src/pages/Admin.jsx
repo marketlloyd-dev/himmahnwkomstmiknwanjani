@@ -45,15 +45,8 @@ function RichTextEditor({ value, onChange, placeholder }) {
   const imageInputRef = useRef(null);
   const isInternalChange = useRef(false);
   const [activeFormats, setActiveFormats] = useState({
-    bold: false,
-    italic: false,
-    underline: false,
-    strikeThrough: false,
-    h2: false,
-    h3: false,
-    blockquote: false,
-    unorderedList: false,
-    orderedList: false,
+    bold: false, italic: false, underline: false, strikeThrough: false,
+    h2: false, h3: false, blockquote: false, unorderedList: false, orderedList: false,
   });
 
   useEffect(() => {
@@ -70,15 +63,8 @@ function RichTextEditor({ value, onChange, placeholder }) {
     const sel = window.getSelection();
     if (!sel || !sel.rangeCount || !editorRef.current.contains(sel.anchorNode)) {
       setActiveFormats({
-        bold: false,
-        italic: false,
-        underline: false,
-        strikeThrough: false,
-        h2: false,
-        h3: false,
-        blockquote: false,
-        unorderedList: false,
-        orderedList: false,
+        bold: false, italic: false, underline: false, strikeThrough: false,
+        h2: false, h3: false, blockquote: false, unorderedList: false, orderedList: false,
       });
       return;
     }
@@ -87,15 +73,9 @@ function RichTextEditor({ value, onChange, placeholder }) {
       italic: document.queryCommandState('italic'),
       underline: document.queryCommandState('underline'),
       strikeThrough: document.queryCommandState('strikeThrough'),
-      h2:
-        document.queryCommandState('formatBlock') &&
-        document.queryCommandValue('formatBlock') === 'h2',
-      h3:
-        document.queryCommandState('formatBlock') &&
-        document.queryCommandValue('formatBlock') === 'h3',
-      blockquote:
-        document.queryCommandState('formatBlock') &&
-        document.queryCommandValue('formatBlock') === 'blockquote',
+      h2: document.queryCommandState('formatBlock') && document.queryCommandValue('formatBlock') === 'h2',
+      h3: document.queryCommandState('formatBlock') && document.queryCommandValue('formatBlock') === 'h3',
+      blockquote: document.queryCommandState('formatBlock') && document.queryCommandValue('formatBlock') === 'blockquote',
       unorderedList: document.queryCommandState('insertUnorderedList'),
       orderedList: document.queryCommandState('insertOrderedList'),
     });
@@ -108,54 +88,40 @@ function RichTextEditor({ value, onChange, placeholder }) {
     return () => document.removeEventListener('selectionchange', updateActiveFormats);
   }, [updateActiveFormats]);
 
-  const execCommand = useCallback(
-    (command, val = null) => {
-      editorRef.current?.focus();
-      if (command === 'heading') {
-        document.execCommand('heading', false, val);
-        if (!document.queryCommandState('heading')) {
-          document.execCommand('formatBlock', false, `<${val}>`);
-        }
-      } else if (command === 'formatBlock') {
-        document.execCommand('formatBlock', false, val);
-      } else {
-        document.execCommand(command, false, val);
-      }
-      if (editorRef.current) {
-        isInternalChange.current = true;
-        onChange(editorRef.current.innerHTML);
-      }
-      setTimeout(() => updateActiveFormats(), 10);
-    },
-    [onChange, updateActiveFormats]
-  );
+  const execCommand = useCallback((command, val = null) => {
+    editorRef.current?.focus();
+    if (command === 'heading') {
+      document.execCommand('heading', false, val);
+      if (!document.queryCommandState('heading')) document.execCommand('formatBlock', false, `<${val}>`);
+    } else if (command === 'formatBlock') {
+      document.execCommand('formatBlock', false, val);
+    } else {
+      document.execCommand(command, false, val);
+    }
+    if (editorRef.current) {
+      isInternalChange.current = true;
+      onChange(editorRef.current.innerHTML);
+    }
+    setTimeout(() => updateActiveFormats(), 10);
+  }, [onChange, updateActiveFormats]);
 
   const handleInsertLink = () => {
     if (linkUrl.trim()) {
       document.execCommand('createLink', false, linkUrl.trim());
-      if (editorRef.current) {
-        isInternalChange.current = true;
-        onChange(editorRef.current.innerHTML);
-      }
-      setLinkUrl('');
-      setShowLinkInput(false);
+      if (editorRef.current) { isInternalChange.current = true; onChange(editorRef.current.innerHTML); }
+      setLinkUrl(''); setShowLinkInput(false);
     }
   };
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    try {
-      const url = await uploadImage(file);
-      execCommand('insertImage', url);
-    } catch (err) {
-      alert('Gagal upload gambar: ' + err.message);
-    }
+    try { const url = await uploadImage(file); execCommand('insertImage', url); } catch (err) { alert('Gagal upload gambar: ' + err.message); }
   };
 
-  const btnBase = 'p-2 rounded transition-colors';
-  const btnInactive = 'hover:bg-gray-200 text-gray-600';
-  const btnActive = 'bg-green-200 text-green-800 hover:bg-green-300';
+  const btnBase = "p-2 rounded transition-colors";
+  const btnInactive = "hover:bg-gray-200 text-gray-600";
+  const btnActive = "bg-green-200 text-green-800 hover:bg-green-300";
 
   return (
     <div className="border border-white/20 rounded-xl overflow-hidden bg-white">
@@ -185,23 +151,11 @@ function RichTextEditor({ value, onChange, placeholder }) {
       </div>
       <div
         ref={editorRef}
-        contentEditable
-        suppressContentEditableWarning
-        dir="ltr"
+        contentEditable suppressContentEditableWarning dir="ltr"
         className="min-h-[300px] p-4 text-gray-800 focus:outline-none"
         style={{ direction: 'ltr', textAlign: 'left' }}
-        onInput={() => {
-          if (editorRef.current) {
-            isInternalChange.current = true;
-            onChange(editorRef.current.innerHTML);
-          }
-          setTimeout(() => updateActiveFormats(), 10);
-        }}
-        onPaste={(e) => {
-          e.preventDefault();
-          const text = e.clipboardData.getData('text/plain');
-          document.execCommand('insertText', false, text);
-        }}
+        onInput={() => { if (editorRef.current) { isInternalChange.current = true; onChange(editorRef.current.innerHTML); } setTimeout(() => updateActiveFormats(), 10); }}
+        onPaste={(e) => { e.preventDefault(); const text = e.clipboardData.getData('text/plain'); document.execCommand('insertText', false, text); }}
         data-placeholder={placeholder || 'Tulis konten berita...'}
       />
     </div>
@@ -221,12 +175,11 @@ export default function Admin() {
     anggotaList, saveAnggotaList,
     beritaInternal, saveBeritaInternal,
     inviteCode, saveInviteCode,
-    presensiList,      // <-- tambahkan
-    pengumumanList,    // <-- tambahkan
-    savePengumuman,    // <-- tambahkan
-    deletePengumuman,  // <-- tambahkan
+    presensiList,
+    pengumumanList, savePengumuman, deletePengumuman,
   } = useApp();
 
+  /* --- State Global --- */
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -234,103 +187,70 @@ export default function Admin() {
   const [isUploading, setIsUploading] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
+  /* --- Crop Universal --- */
   const [cropModal, setCropModal] = useState({
-    open: false,
-    imageSrc: '',
-    onCropComplete: null,
-    aspect: 1,
-    cropShape: 'rect',
+    open: false, imageSrc: '', onCropComplete: null, aspect: 1, cropShape: 'rect',
   });
 
-  const [beritaForm, setBeritaForm] = useState({
-    judul: '', tanggal: '', kategori: '', fotoFile: null, kontenHTML: '',
-  });
+  /* --- Berita --- */
+  const [beritaForm, setBeritaForm] = useState({ judul: '', tanggal: '', kategori: '', fotoFile: null, kontenHTML: '' });
   const [editBeritaId, setEditBeritaId] = useState(null);
   const fileBeritaRef = useRef(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterKategori, setFilterKategori] = useState('');
   const [filterTanggal, setFilterTanggal] = useState('');
 
-  const [divisiForm, setDivisiForm] = useState({
-    nama: '', programKerja: '', anggota: [{ nama: '', jabatan: 'Anggota', foto: '' }],
-  });
+  /* --- Divisi --- */
+  const [divisiForm, setDivisiForm] = useState({ nama: '', programKerja: '', anggota: [{ nama: '', jabatan: 'Anggota', foto: '' }] });
   const [editDivisiId, setEditDivisiId] = useState(null);
 
+  /* --- Banner --- */
   const [bannerFile, setBannerFile] = useState(null);
   const [bannerAlt, setBannerAlt] = useState('');
 
+  /* --- Logo --- */
   const [previewLogo, setPreviewLogo] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
 
-  const [pengurusForm, setPengurusForm] = useState({
-    ketua: { nama: '', fotoFile: null },
-    sekretaris: { nama: '', fotoFile: null },
-    bendahara: { nama: '', fotoFile: null },
-  });
-  const [previewPengurus, setPreviewPengurus] = useState({
-    ketua: null, sekretaris: null, bendahara: null,
-  });
+  /* --- Pengurus --- */
+  const [pengurusForm, setPengurusForm] = useState({ ketua: { nama: '', fotoFile: null }, sekretaris: { nama: '', fotoFile: null }, bendahara: { nama: '', fotoFile: null } });
+  const [previewPengurus, setPreviewPengurus] = useState({ ketua: null, sekretaris: null, bendahara: null });
 
-  const [sejarahForm, setSejarahForm] = useState({
-    tahunBerdiri: dataKomisariat.tahunBerdiri,
-    deskripsi: dataKomisariat.deskripsi,
-  });
+  /* --- Sejarah --- */
+  const [sejarahForm, setSejarahForm] = useState({ tahunBerdiri: dataKomisariat.tahunBerdiri, deskripsi: dataKomisariat.deskripsi });
 
-  const [adminAccountsState, setAdminAccountsState] = useState(() => {
-    const saved = localStorage.getItem('himmah_admin_accounts');
-    return saved ? JSON.parse(saved) : adminAccounts;
-  });
+  /* --- Admin Management --- */
+  const [adminAccountsState, setAdminAccountsState] = useState(() => { const s = localStorage.getItem('himmah_admin_accounts'); return s ? JSON.parse(s) : adminAccounts; });
   const [newAdmin, setNewAdmin] = useState({ username: '', password: '' });
 
-  const [countdownForm, setCountdownForm] = useState({
-    title: '', description: '', targetDate: '',
-  });
+  /* --- Countdown --- */
+  const [countdownForm, setCountdownForm] = useState({ title: '', description: '', targetDate: '' });
 
-  const [pollForm, setPollForm] = useState({
-    question: '',
-    options: [
-      { text: '', votes: 0 },
-      { text: '', votes: 0 },
-    ],
-  });
+  /* --- Polling --- */
+  const [pollForm, setPollForm] = useState({ question: '', options: [{ text: '', votes: 0 }, { text: '', votes: 0 }] });
 
-  const [anggotaForm, setAnggotaForm] = useState({
-    nim: '', nama: '', password: '', jurusan: '', angkatan: '', divisi: '', foto: ''
-  });
+  /* --- Anggota --- */
+  const [anggotaForm, setAnggotaForm] = useState({ nim: '', nama: '', password: '', jurusan: '', angkatan: '', divisi: '', foto: '' });
   const [editAnggotaNim, setEditAnggotaNim] = useState(null);
 
-  const [beritaInternalForm, setBeritaInternalForm] = useState({
-    judul: '', isi: '', tanggal: ''
-  });
+  /* --- Berita Internal --- */
+  const [beritaInternalForm, setBeritaInternalForm] = useState({ judul: '', isi: '', tanggal: '' });
   const [editBeritaInternalId, setEditBeritaInternalId] = useState(null);
 
+  /* --- Invite Code --- */
   const [inviteCodeForm, setInviteCodeForm] = useState(inviteCode);
-  const [pengumumanForm, setPengumumanForm] = useState({
-   judul: '',
-   isi: '',
-    tanggal: '',
-  });
 
-  const [activityLog, setActivityLog] = useState(() => {
-    const saved = localStorage.getItem('himmah_activity_log');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const logActivity = (action) => {
-    const entry = {
-      action,
-      timestamp: new Date().toISOString(),
-      user: username || 'Admin',
-    };
-    const updated = [entry, ...activityLog].slice(0, 100);
-    setActivityLog(updated);
-    localStorage.setItem('himmah_activity_log', JSON.stringify(updated));
-  };
+  /* --- Pengumuman --- */
+  const [pengumumanForm, setPengumumanForm] = useState({ judul: '', isi: '', tanggal: '' });
 
+  /* --- Riwayat Aktivitas --- */
+  const [activityLog, setActivityLog] = useState(() => { const s = localStorage.getItem('himmah_activity_log'); return s ? JSON.parse(s) : []; });
+  const logActivity = (action) => { const entry = { action, timestamp: new Date().toISOString(), user: username || 'Admin' }; const updated = [entry, ...activityLog].slice(0, 100); setActivityLog(updated); localStorage.setItem('himmah_activity_log', JSON.stringify(updated)); };
+
+  /* ---------- Login ---------- */
   const handleLogin = (e) => {
     e.preventDefault();
-    const found = adminAccountsState.find(
-      (a) => a.username === username && a.password === password
-    );
+    const found = adminAccountsState.find(a => a.username === username && a.password === password);
     if (found) { login(); setLoginError(''); }
     else setLoginError('Username atau password salah!');
   };
@@ -339,87 +259,41 @@ export default function Admin() {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-[#002b13] to-[#004d24]">
         <div className="glass p-8 rounded-2xl w-full max-w-md text-center">
-          <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-            <User size={32} className="text-green-400" />
-          </div>
+          <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-3"><User size={32} className="text-green-400" /></div>
           <h2 className="text-2xl font-playfair font-bold text-white">Panel Admin</h2>
           <p className="text-green-300/60 text-sm mt-1">HIMMAH NW Komisariat STMIK</p>
           <form onSubmit={handleLogin} className="mt-6 space-y-4 text-left">
-            <div>
-              <label className="text-green-300 text-sm font-medium">Username</label>
-              <input type="text" value={username} onChange={(e) => setUsername(e.target.value)}
-                className="w-full mt-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-400"
-                placeholder="Masukkan username" required />
-            </div>
-            <div>
-              <label className="text-green-300 text-sm font-medium">Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                className="w-full mt-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-400"
-                placeholder="Masukkan password" required />
-            </div>
-            {loginError && (
-              <p className="text-red-400 text-sm text-center bg-red-500/10 py-2 rounded-lg">{loginError}</p>
-            )}
-            <button type="submit" className="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors">
-              Masuk ke Panel
-            </button>
+            <div><label className="text-green-300 text-sm font-medium">Username</label><input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full mt-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-400" placeholder="Masukkan username" required /></div>
+            <div><label className="text-green-300 text-sm font-medium">Password</label><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full mt-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-400" placeholder="Masukkan password" required /></div>
+            {loginError && <p className="text-red-400 text-sm text-center bg-red-500/10 py-2 rounded-lg">{loginError}</p>}
+            <button type="submit" className="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors">Masuk ke Panel</button>
           </form>
         </div>
       </div>
     );
   }
 
+  /* ======================== FUNGSI CRUD ======================== */
+
+  /* ---------- Berita ---------- */
   const handleBeritaSubmit = async (e) => {
     e.preventDefault();
     if (!beritaForm.judul || !beritaForm.kontenHTML) return;
     let fotoUrl = '';
     if (beritaForm.fotoFile) {
       setIsUploading(true);
-      try { fotoUrl = await uploadImage(beritaForm.fotoFile); } catch (err) {
-        alert('Gagal upload foto: ' + err.message); setIsUploading(false); return;
-      }
+      try { fotoUrl = await uploadImage(beritaForm.fotoFile); } catch (err) { alert('Gagal upload foto: ' + err.message); setIsUploading(false); return; }
       setIsUploading(false);
-    } else if (editBeritaId) {
-      fotoUrl = berita.find(b => b.id === editBeritaId)?.foto || '';
-    }
-    const newBerita = {
-      id: editBeritaId || Date.now(),
-      judul: beritaForm.judul,
-      tanggal: beritaForm.tanggal || new Date().toISOString().slice(0, 10),
-      kategori: beritaForm.kategori,
-      foto: fotoUrl,
-      kontenHTML: beritaForm.kontenHTML,
-    };
-    if (editBeritaId) {
-      saveBerita(berita.map(b => b.id === editBeritaId ? newBerita : b));
-      setEditBeritaId(null);
-      logActivity(`Mengedit berita "${newBerita.judul}"`);
-    } else {
-      saveBerita([newBerita, ...berita]);
-      logActivity(`Menambah berita baru "${newBerita.judul}"`);
-    }
+    } else if (editBeritaId) { fotoUrl = berita.find(b => b.id === editBeritaId)?.foto || ''; }
+    const newBerita = { id: editBeritaId || Date.now(), judul: beritaForm.judul, tanggal: beritaForm.tanggal || new Date().toISOString().slice(0, 10), kategori: beritaForm.kategori, foto: fotoUrl, kontenHTML: beritaForm.kontenHTML };
+    if (editBeritaId) { saveBerita(berita.map(b => b.id === editBeritaId ? newBerita : b)); setEditBeritaId(null); logActivity(`Mengedit berita "${newBerita.judul}"`); }
+    else { saveBerita([newBerita, ...berita]); logActivity(`Menambah berita baru "${newBerita.judul}"`); }
     setBeritaForm({ judul: '', tanggal: '', kategori: '', fotoFile: null, kontenHTML: '' });
     if (fileBeritaRef.current) fileBeritaRef.current.value = '';
     localStorage.removeItem('himmah_berita_draft');
   };
-
-  const handleEditBerita = (item) => {
-    setBeritaForm({
-      judul: item.judul || '', tanggal: item.tanggal || '', kategori: item.kategori || '',
-      fotoFile: null, kontenHTML: item.kontenHTML || '',
-    });
-    setEditBeritaId(item.id);
-    setActiveTab('berita');
-  };
-
-  const handleDeleteBerita = (id) => {
-    const item = berita.find(b => b.id === id);
-    if (window.confirm('Hapus berita ini?')) {
-      saveBerita(berita.filter(b => b.id !== id));
-      logActivity(`Menghapus berita "${item?.judul}"`);
-    }
-  };
-
+  const handleEditBerita = (item) => { setBeritaForm({ judul: item.judul || '', tanggal: item.tanggal || '', kategori: item.kategori || '', fotoFile: null, kontenHTML: item.kontenHTML || '' }); setEditBeritaId(item.id); setActiveTab('berita'); };
+  const handleDeleteBerita = (id) => { const item = berita.find(b => b.id === id); if (window.confirm('Hapus berita ini?')) { saveBerita(berita.filter(b => b.id !== id)); logActivity(`Menghapus berita "${item?.judul}"`); } };
   const filteredBerita = berita.filter(item => {
     const matchSearch = !searchQuery || item.judul.toLowerCase().includes(searchQuery.toLowerCase());
     const matchKategori = !filterKategori || (item.kategori || '').toLowerCase().includes(filterKategori.toLowerCase());
@@ -427,336 +301,81 @@ export default function Admin() {
     return matchSearch && matchKategori && matchTanggal;
   });
 
+  /* ---------- Divisi ---------- */
   const handleDivisiSubmit = (e) => {
     e.preventDefault();
-    const newDivisi = {
-      id: editDivisiId || Date.now(),
-      nama: divisiForm.nama,
-      programKerja: divisiForm.programKerja.split('\n').filter(Boolean),
-      anggota: divisiForm.anggota.filter(a => a.nama.trim() !== ''),
-    };
-    if (editDivisiId) {
-      saveDivisi(divisi.map(d => d.id === editDivisiId ? newDivisi : d));
-      setEditDivisiId(null);
-      logActivity(`Mengedit divisi "${newDivisi.nama}"`);
-    } else {
-      saveDivisi([...divisi, newDivisi]);
-      logActivity(`Menambah divisi "${newDivisi.nama}"`);
-    }
+    const newDivisi = { id: editDivisiId || Date.now(), nama: divisiForm.nama, programKerja: divisiForm.programKerja.split('\n').filter(Boolean), anggota: divisiForm.anggota.filter(a => a.nama.trim() !== '') };
+    if (editDivisiId) { saveDivisi(divisi.map(d => d.id === editDivisiId ? newDivisi : d)); setEditDivisiId(null); logActivity(`Mengedit divisi "${newDivisi.nama}"`); }
+    else { saveDivisi([...divisi, newDivisi]); logActivity(`Menambah divisi "${newDivisi.nama}"`); }
     setDivisiForm({ nama: '', programKerja: '', anggota: [{ nama: '', jabatan: 'Anggota', foto: '' }] });
   };
+  const handleEditDivisi = (item) => { setDivisiForm({ nama: item.nama, programKerja: item.programKerja.join('\n'), anggota: item.anggota.length > 0 ? item.anggota : [{ nama: '', jabatan: 'Anggota', foto: '' }] }); setEditDivisiId(item.id); setActiveTab('divisi'); };
+  const handleDeleteDivisi = (id) => { const item = divisi.find(d => d.id === id); if (window.confirm('Hapus divisi ini?')) { saveDivisi(divisi.filter(d => d.id !== id)); logActivity(`Menghapus divisi "${item?.nama}"`); } };
 
-  const handleEditDivisi = (item) => {
-    setDivisiForm({
-      nama: item.nama,
-      programKerja: item.programKerja.join('\n'),
-      anggota: item.anggota.length > 0 ? item.anggota : [{ nama: '', jabatan: 'Anggota', foto: '' }],
-    });
-    setEditDivisiId(item.id);
-    setActiveTab('divisi');
-  };
-
-  const handleDeleteDivisi = (id) => {
-    const item = divisi.find(d => d.id === id);
-    if (window.confirm('Hapus divisi ini?')) {
-      saveDivisi(divisi.filter(d => d.id !== id));
-      logActivity(`Menghapus divisi "${item?.nama}"`);
-    }
-  };
-
+  /* ---------- Banner ---------- */
   const handleBannerSubmit = async (e) => {
-    e.preventDefault();
-    if (!bannerFile) return;
+    e.preventDefault(); if (!bannerFile) return;
     setIsUploading(true);
-    try {
-      const imageUrl = await uploadImage(bannerFile);
-      saveBanner([...bannerImages, { id: Date.now(), src: imageUrl, alt: bannerAlt }]);
-      setBannerFile(null); setBannerAlt('');
-      logActivity('Menambah banner baru');
-    } catch (err) { alert('Upload banner gagal: ' + err.message); }
+    try { const imageUrl = await uploadImage(bannerFile); saveBanner([...bannerImages, { id: Date.now(), src: imageUrl, alt: bannerAlt }]); setBannerFile(null); setBannerAlt(''); logActivity('Menambah banner baru'); } catch (err) { alert('Upload banner gagal: ' + err.message); }
     setIsUploading(false);
   };
-  const handleDeleteBanner = (id) => {
-    saveBanner(bannerImages.filter(b => b.id !== id));
-    logActivity('Menghapus banner');
-  };
+  const handleDeleteBanner = (id) => { saveBanner(bannerImages.filter(b => b.id !== id)); logActivity('Menghapus banner'); };
 
-  const handleSaveLogo = async () => {
-    if (!logoFile) return;
-    setIsUploading(true);
-    try {
-      const imageUrl = await uploadImage(logoFile);
-      saveLogo(imageUrl);
-      setLogoFile(null); setPreviewLogo(null);
-      logActivity('Mengubah logo');
-      alert('Logo berhasil diperbarui!');
-    } catch (err) { alert('Upload logo gagal: ' + err.message); }
-    setIsUploading(false);
-  };
-  const handleResetLogo = () => {
-    if (window.confirm('Reset logo ke default?')) {
-      saveLogo(null); setPreviewLogo(null); setLogoFile(null);
-      logActivity('Reset logo ke default');
-    }
-  };
+  /* ---------- Logo ---------- */
+  const handleSaveLogo = async () => { if (!logoFile) return; setIsUploading(true); try { const imageUrl = await uploadImage(logoFile); saveLogo(imageUrl); setLogoFile(null); setPreviewLogo(null); logActivity('Mengubah logo'); alert('Logo berhasil diperbarui!'); } catch (err) { alert('Upload logo gagal: ' + err.message); } setIsUploading(false); };
+  const handleResetLogo = () => { if (window.confirm('Reset logo ke default?')) { saveLogo(null); setPreviewLogo(null); setLogoFile(null); logActivity('Reset logo ke default'); } };
 
-  const loadPengurusToForm = () => {
-    if (pengurus) {
-      setPengurusForm({
-        ketua: { nama: pengurus.ketua?.nama || '', fotoFile: null },
-        sekretaris: { nama: pengurus.sekretaris?.nama || '', fotoFile: null },
-        bendahara: { nama: pengurus.bendahara?.nama || '', fotoFile: null },
-      });
-    }
-  };
-  const handleSaveInfoPengurus = (role) => {
-    const newName = pengurusForm[role].nama;
-    const newPengurus = { ...pengurus };
-    newPengurus[role] = { ...newPengurus[role], nama: newName };
-    savePengurus(newPengurus);
-    logActivity(`Mengubah nama ${role}`);
-    alert(`Nama ${role} berhasil diperbarui!`);
-  };
+  /* ---------- Pengurus ---------- */
+  const loadPengurusToForm = () => { if (pengurus) setPengurusForm({ ketua: { nama: pengurus.ketua?.nama || '', fotoFile: null }, sekretaris: { nama: pengurus.sekretaris?.nama || '', fotoFile: null }, bendahara: { nama: pengurus.bendahara?.nama || '', fotoFile: null } }); };
+  const handleSaveInfoPengurus = (role) => { const newName = pengurusForm[role].nama; const newPengurus = { ...pengurus }; newPengurus[role] = { ...newPengurus[role], nama: newName }; savePengurus(newPengurus); logActivity(`Mengubah nama ${role}`); alert(`Nama ${role} berhasil diperbarui!`); };
   const handleUploadFotoPengurus = async (role) => {
-    const file = pengurusForm[role].fotoFile;
-    if (!file) return;
+    const file = pengurusForm[role].fotoFile; if (!file) return;
     setIsUploading(true);
-    try {
-      const imageUrl = await uploadImage(file);
-      const newPengurus = { ...pengurus };
-      newPengurus[role] = { ...newPengurus[role], foto: imageUrl };
-      savePengurus(newPengurus);
-      setPreviewPengurus({ ...previewPengurus, [role]: null });
-      setPengurusForm({ ...pengurusForm, [role]: { ...pengurusForm[role], fotoFile: null } });
-      logActivity(`Mengubah foto ${role}`);
-      alert(`Foto ${role} berhasil diperbarui!`);
-    } catch (err) { alert('Upload foto gagal: ' + err.message); }
+    try { const imageUrl = await uploadImage(file); const newPengurus = { ...pengurus }; newPengurus[role] = { ...newPengurus[role], foto: imageUrl }; savePengurus(newPengurus); setPreviewPengurus({ ...previewPengurus, [role]: null }); setPengurusForm({ ...pengurusForm, [role]: { ...pengurusForm[role], fotoFile: null } }); logActivity(`Mengubah foto ${role}`); alert(`Foto ${role} berhasil diperbarui!`); } catch (err) { alert('Upload foto gagal: ' + err.message); }
     setIsUploading(false);
   };
 
-  const handlePengurusFileChange = (role, file) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      setCropModal({
-        open: true,
-        imageSrc: reader.result,
-        aspect: 1,
-        cropShape: 'round',
-        onCropComplete: (croppedBlob) => {
-          const croppedFile = new File([croppedBlob], 'cropped.jpg', { type: 'image/jpeg' });
-          setPengurusForm({
-            ...pengurusForm,
-            [role]: { ...pengurusForm[role], fotoFile: croppedFile },
-          });
-          const previewReader = new FileReader();
-          previewReader.onload = () => setPreviewPengurus({ ...previewPengurus, [role]: previewReader.result });
-          previewReader.readAsDataURL(croppedFile);
-        },
-      });
-    };
-    reader.readAsDataURL(file);
-  };
+  /* ---------- Handler crop ---------- */
+  const handlePengurusFileChange = (role, file) => { const reader = new FileReader(); reader.onload = () => setCropModal({ open: true, imageSrc: reader.result, aspect: 1, cropShape: 'round', onCropComplete: (croppedBlob) => { const croppedFile = new File([croppedBlob], 'cropped.jpg', { type: 'image/jpeg' }); setPengurusForm({ ...pengurusForm, [role]: { ...pengurusForm[role], fotoFile: croppedFile } }); const previewReader = new FileReader(); previewReader.onload = () => setPreviewPengurus({ ...previewPengurus, [role]: previewReader.result }); previewReader.readAsDataURL(croppedFile); } }); reader.readAsDataURL(file); };
+  const handleBeritaFileChange = (file) => { const reader = new FileReader(); reader.onload = () => setCropModal({ open: true, imageSrc: reader.result, aspect: 16 / 9, cropShape: 'rect', onCropComplete: (croppedBlob) => setBeritaForm({ ...beritaForm, fotoFile: new File([croppedBlob], 'cropped.jpg', { type: 'image/jpeg' }) }) }); reader.readAsDataURL(file); };
+  const handleBannerFileChange = (file) => { const reader = new FileReader(); reader.onload = () => setCropModal({ open: true, imageSrc: reader.result, aspect: 2 / 1, cropShape: 'rect', onCropComplete: (croppedBlob) => setBannerFile(new File([croppedBlob], 'cropped.jpg', { type: 'image/jpeg' })) }); reader.readAsDataURL(file); };
+  const handleLogoFileChange = (file) => { const reader = new FileReader(); reader.onload = () => setCropModal({ open: true, imageSrc: reader.result, aspect: 1, cropShape: 'rect', onCropComplete: (croppedBlob) => { const croppedFile = new File([croppedBlob], 'cropped.jpg', { type: 'image/jpeg' }); setLogoFile(croppedFile); const previewReader = new FileReader(); previewReader.onload = () => setPreviewLogo(previewReader.result); previewReader.readAsDataURL(croppedFile); } }); reader.readAsDataURL(file); };
+  const handleAnggotaFileChange = (index, file) => { const reader = new FileReader(); reader.onload = () => setCropModal({ open: true, imageSrc: reader.result, aspect: 1, cropShape: 'rect', onCropComplete: async (croppedBlob) => { const croppedFile = new File([croppedBlob], 'cropped.jpg', { type: 'image/jpeg' }); try { const url = await uploadImage(croppedFile); const updatedAnggota = [...divisiForm.anggota]; updatedAnggota[index] = { ...updatedAnggota[index], foto: url }; setDivisiForm({ ...divisiForm, anggota: updatedAnggota }); } catch (err) { alert('Gagal upload foto: ' + err.message); } } }); reader.readAsDataURL(file); };
 
-  const handleBeritaFileChange = (file) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      setCropModal({
-        open: true,
-        imageSrc: reader.result,
-        aspect: 16 / 9,
-        cropShape: 'rect',
-        onCropComplete: (croppedBlob) => {
-          setBeritaForm({ ...beritaForm, fotoFile: new File([croppedBlob], 'cropped.jpg', { type: 'image/jpeg' }) });
-        },
-      });
-    };
-    reader.readAsDataURL(file);
-  };
+  /* ---------- Sejarah ---------- */
+  const handleSaveSejarah = () => { localStorage.setItem('himmah_sejarah', JSON.stringify(sejarahForm)); logActivity('Mengubah data sejarah'); alert('Sejarah berhasil diperbarui!'); };
 
-  const handleBannerFileChange = (file) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      setCropModal({
-        open: true,
-        imageSrc: reader.result,
-        aspect: 2 / 1,
-        cropShape: 'rect',
-        onCropComplete: (croppedBlob) => {
-          setBannerFile(new File([croppedBlob], 'cropped.jpg', { type: 'image/jpeg' }));
-        },
-      });
-    };
-    reader.readAsDataURL(file);
-  };
+  /* ---------- Admin Management ---------- */
+  const handleAddAdmin = () => { if (!newAdmin.username || !newAdmin.password) return; const updated = [...adminAccountsState, { ...newAdmin }]; setAdminAccountsState(updated); localStorage.setItem('himmah_admin_accounts', JSON.stringify(updated)); setNewAdmin({ username: '', password: '' }); logActivity(`Menambah admin "${newAdmin.username}"`); };
+  const handleDeleteAdmin = (index) => { if (adminAccountsState.length <= 1) { alert('Minimal 1 admin.'); return; } const removed = adminAccountsState[index]; const updated = adminAccountsState.filter((_, i) => i !== index); setAdminAccountsState(updated); localStorage.setItem('himmah_admin_accounts', JSON.stringify(updated)); logActivity(`Menghapus admin "${removed.username}"`); };
 
-  const handleLogoFileChange = (file) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      setCropModal({
-        open: true,
-        imageSrc: reader.result,
-        aspect: 1,
-        cropShape: 'rect',
-        onCropComplete: (croppedBlob) => {
-          const croppedFile = new File([croppedBlob], 'cropped.jpg', { type: 'image/jpeg' });
-          setLogoFile(croppedFile);
-          const previewReader = new FileReader();
-          previewReader.onload = () => setPreviewLogo(previewReader.result);
-          previewReader.readAsDataURL(croppedFile);
-        },
-      });
-    };
-    reader.readAsDataURL(file);
-  };
+  /* ---------- Countdown ---------- */
+  const handleSaveCountdown = () => { if (!countdownForm.targetDate) return; saveCountdownEvent(countdownForm); logActivity('Mengatur countdown acara'); alert('Countdown acara disimpan!'); };
+  const handleRemoveCountdown = () => { if (window.confirm('Hapus countdown?')) { removeCountdownEvent(); setCountdownForm({ title: '', description: '', targetDate: '' }); logActivity('Menghapus countdown acara'); } };
 
-  const handleAnggotaFileChange = (index, file) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      setCropModal({
-        open: true,
-        imageSrc: reader.result,
-        aspect: 1,
-        cropShape: 'rect',
-        onCropComplete: async (croppedBlob) => {
-          const croppedFile = new File([croppedBlob], 'cropped.jpg', { type: 'image/jpeg' });
-          try {
-            const url = await uploadImage(croppedFile);
-            const updatedAnggota = [...divisiForm.anggota];
-            updatedAnggota[index] = { ...updatedAnggota[index], foto: url };
-            setDivisiForm({ ...divisiForm, anggota: updatedAnggota });
-          } catch (err) { alert('Gagal upload foto: ' + err.message); }
-        },
-      });
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleSaveSejarah = () => {
-    localStorage.setItem('himmah_sejarah', JSON.stringify(sejarahForm));
-    logActivity('Mengubah data sejarah');
-    alert('Sejarah berhasil diperbarui!');
-  };
-
-  const handleAddAdmin = () => {
-    if (!newAdmin.username || !newAdmin.password) return;
-    const updated = [...adminAccountsState, { ...newAdmin }];
-    setAdminAccountsState(updated);
-    localStorage.setItem('himmah_admin_accounts', JSON.stringify(updated));
-    setNewAdmin({ username: '', password: '' });
-    logActivity(`Menambah admin "${newAdmin.username}"`);
-  };
-  const handleDeleteAdmin = (index) => {
-    if (adminAccountsState.length <= 1) { alert('Minimal 1 admin.'); return; }
-    const removed = adminAccountsState[index];
-    const updated = adminAccountsState.filter((_, i) => i !== index);
-    setAdminAccountsState(updated);
-    localStorage.setItem('himmah_admin_accounts', JSON.stringify(updated));
-    logActivity(`Menghapus admin "${removed.username}"`);
-  };
-
-  const handleSaveCountdown = () => {
-    if (!countdownForm.targetDate) return;
-    saveCountdownEvent(countdownForm);
-    logActivity('Mengatur countdown acara');
-    alert('Countdown acara disimpan!');
-  };
-  const handleRemoveCountdown = () => {
-    if (window.confirm('Hapus countdown?')) {
-      removeCountdownEvent();
-      setCountdownForm({ title: '', description: '', targetDate: '' });
-      logActivity('Menghapus countdown acara');
-    }
-  };
-
+  /* ---------- Polling ---------- */
   const addOption = () => setPollForm({ ...pollForm, options: [...pollForm.options, { text: '', votes: 0 }] });
-  const removeOption = (index) => {
-    if (pollForm.options.length <= 2) return;
-    const newOpts = pollForm.options.filter((_, i) => i !== index);
-    setPollForm({ ...pollForm, options: newOpts });
-  };
-  const updateOption = (index, value) => {
-    const newOpts = [...pollForm.options];
-    newOpts[index].text = value;
-    setPollForm({ ...pollForm, options: newOpts });
-  };
-  const handleSavePoll = () => {
-    if (!pollForm.question.trim()) return;
-    const validOptions = pollForm.options.filter(opt => opt.text.trim());
-    if (validOptions.length < 2) { alert('Minimal 2 opsi'); return; }
-    savePoll({ ...pollForm, options: validOptions });
-    logActivity('Membuat polling baru');
-    alert('Polling disimpan!');
-  };
-  const handleRemovePoll = () => {
-    if (window.confirm('Hapus polling?')) {
-      removePoll();
-      setPollForm({ question: '', options: [{ text: '', votes: 0 }, { text: '', votes: 0 }] });
-      logActivity('Menghapus polling');
-    }
-  };
+  const removeOption = (index) => { if (pollForm.options.length <= 2) return; const newOpts = pollForm.options.filter((_, i) => i !== index); setPollForm({ ...pollForm, options: newOpts }); };
+  const updateOption = (index, value) => { const newOpts = [...pollForm.options]; newOpts[index].text = value; setPollForm({ ...pollForm, options: newOpts }); };
+  const handleSavePoll = () => { if (!pollForm.question.trim()) return; const validOptions = pollForm.options.filter(opt => opt.text.trim()); if (validOptions.length < 2) { alert('Minimal 2 opsi'); return; } savePoll({ ...pollForm, options: validOptions }); logActivity('Membuat polling baru'); alert('Polling disimpan!'); };
+  const handleRemovePoll = () => { if (window.confirm('Hapus polling?')) { removePoll(); setPollForm({ question: '', options: [{ text: '', votes: 0 }, { text: '', votes: 0 }] }); logActivity('Menghapus polling'); } };
 
-  const handleAnggotaSubmit = (e) => {
-    e.preventDefault();
-    if (!anggotaForm.nim || !anggotaForm.nama || !anggotaForm.password) return;
-    if (editAnggotaNim) {
-      saveAnggotaList(anggotaList.map(a => a.nim === editAnggotaNim ? anggotaForm : a));
-      setEditAnggotaNim(null);
-      logActivity(`Mengedit anggota ${anggotaForm.nama}`);
-    } else {
-      saveAnggotaList([...anggotaList, anggotaForm]);
-      logActivity(`Menambah anggota ${anggotaForm.nama}`);
-    }
-    setAnggotaForm({ nim: '', nama: '', password: '', jurusan: '', angkatan: '', divisi: '', foto: '' });
-  };
-  const handleDeleteAnggota = (nim) => {
-    if (window.confirm('Hapus anggota ini?')) {
-      saveAnggotaList(anggotaList.filter(a => a.nim !== nim));
-      logActivity(`Menghapus anggota dengan NIM ${nim}`);
-    }
-  };
+  /* ---------- Anggota ---------- */
+  const handleAnggotaSubmit = (e) => { e.preventDefault(); if (!anggotaForm.nim || !anggotaForm.nama || !anggotaForm.password) return; if (editAnggotaNim) { saveAnggotaList(anggotaList.map(a => a.nim === editAnggotaNim ? anggotaForm : a)); setEditAnggotaNim(null); logActivity(`Mengedit anggota ${anggotaForm.nama}`); } else { saveAnggotaList([...anggotaList, anggotaForm]); logActivity(`Menambah anggota ${anggotaForm.nama}`); } setAnggotaForm({ nim: '', nama: '', password: '', jurusan: '', angkatan: '', divisi: '', foto: '' }); };
+  const handleDeleteAnggota = (nim) => { if (window.confirm('Hapus anggota ini?')) { saveAnggotaList(anggotaList.filter(a => a.nim !== nim)); logActivity(`Menghapus anggota dengan NIM ${nim}`); } };
 
-  const handleBeritaInternalSubmit = (e) => {
-    e.preventDefault();
-    if (!beritaInternalForm.judul || !beritaInternalForm.isi) return;
-    const newBerita = { ...beritaInternalForm, id: editBeritaInternalId || Date.now() };
-    if (editBeritaInternalId) {
-      saveBeritaInternal(beritaInternal.map(b => b.id === editBeritaInternalId ? newBerita : b));
-      setEditBeritaInternalId(null);
-      logActivity('Mengedit berita internal');
-    } else {
-      saveBeritaInternal([newBerita, ...beritaInternal]);
-      logActivity('Menambah berita internal');
-    }
-    setBeritaInternalForm({ judul: '', isi: '', tanggal: '' });
-  };
-  const handleDeleteBeritaInternal = (id) => {
-    if (window.confirm('Hapus berita internal ini?')) {
-      saveBeritaInternal(beritaInternal.filter(b => b.id !== id));
-      logActivity('Menghapus berita internal');
-    }
-  };
+  /* ---------- Berita Internal ---------- */
+  const handleBeritaInternalSubmit = (e) => { e.preventDefault(); if (!beritaInternalForm.judul || !beritaInternalForm.isi) return; const newBerita = { ...beritaInternalForm, id: editBeritaInternalId || Date.now() }; if (editBeritaInternalId) { saveBeritaInternal(beritaInternal.map(b => b.id === editBeritaInternalId ? newBerita : b)); setEditBeritaInternalId(null); logActivity('Mengedit berita internal'); } else { saveBeritaInternal([newBerita, ...beritaInternal]); logActivity('Menambah berita internal'); } setBeritaInternalForm({ judul: '', isi: '', tanggal: '' }); };
+  const handleDeleteBeritaInternal = (id) => { if (window.confirm('Hapus berita internal ini?')) { saveBeritaInternal(beritaInternal.filter(b => b.id !== id)); logActivity('Menghapus berita internal'); } };
 
-  const handleSaveInviteCode = () => {
-    saveInviteCode(inviteCodeForm);
-    logActivity('Mengubah kode undangan');
-    alert('Kode undangan berhasil disimpan!');
-  };
-  // --- Fungsi Pengumuman ---
-const handlePengumumanSubmit = (e) => {
-  e.preventDefault();
-  if (!pengumumanForm.judul || !pengumumanForm.isi) return;
-  const newPengumuman = { ...pengumumanForm, id: Date.now() };
-  savePengumuman(newPengumuman);
-  setPengumumanForm({ judul: '', isi: '', tanggal: '' });
-  logActivity('Menambah pengumuman');
-};
+  /* ---------- Invite Code ---------- */
+  const handleSaveInviteCode = () => { saveInviteCode(inviteCodeForm); logActivity('Mengubah kode undangan'); alert('Kode undangan berhasil disimpan!'); };
 
-const handleDeletePengumuman = (id) => {
-  if (window.confirm('Hapus pengumuman ini?')) {
-    deletePengumuman(id);
-    logActivity('Menghapus pengumuman');
-  }
-};
+  /* ---------- Pengumuman ---------- */
+  const handlePengumumanSubmit = (e) => { e.preventDefault(); if (!pengumumanForm.judul || !pengumumanForm.isi) return; const newPengumuman = { ...pengumumanForm, id: Date.now() }; savePengumuman(newPengumuman); setPengumumanForm({ judul: '', isi: '', tanggal: '' }); logActivity('Menambah pengumuman'); };
+  const handleDeletePengumuman = (id) => { if (window.confirm('Hapus pengumuman ini?')) { deletePengumuman(id); logActivity('Menghapus pengumuman'); } };
+
+  /* ---------- Tab Navigation ---------- */
   const tabs = [
     { key: 'dashboard', label: 'Dashboard', icon: <TrendingUp size={16} /> },
     { key: 'berita', label: 'Berita', icon: <Newspaper size={16} /> },
@@ -769,62 +388,36 @@ const handleDeletePengumuman = (id) => {
     { key: 'anggotaMgmt', label: 'Anggota', icon: <User size={16} /> },
     { key: 'beritaInternal', label: 'Internal', icon: <Newspaper size={16} /> },
     { key: 'invite', label: 'Undangan', icon: <Key size={16} /> },
-    { key: 'countdown', label: 'Countdown', icon: <Clock size={16} /> },
-    { key: 'polling', label: 'Polling', icon: <BarChart3 size={16} /> },
     { key: 'pengumuman', label: '📢 Pengumuman', icon: <Bell size={16} /> },
     { key: 'presensi', label: '📋 Presensi', icon: <CheckSquare size={16} /> },
+    { key: 'countdown', label: 'Countdown', icon: <Clock size={16} /> },
+    { key: 'polling', label: 'Polling', icon: <BarChart3 size={16} /> },
   ];
+  const handleTabChange = (tab) => { setActiveTab(tab); if (tab === 'pengurus') loadPengurusToForm(); if (tab === 'countdown' && countdownEvent) setCountdownForm(countdownEvent); if (tab === 'polling' && poll) setPollForm(poll); if (tab === 'invite') setInviteCodeForm(inviteCode); };
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    if (tab === 'pengurus') loadPengurusToForm();
-    if (tab === 'countdown' && countdownEvent) setCountdownForm(countdownEvent);
-    if (tab === 'polling' && poll) setPollForm(poll);
-    if (tab === 'invite') setInviteCodeForm(inviteCode);
-  };
+  const totalBerita = berita.length; const totalDivisi = divisi.length; const totalBanner = bannerImages.length; const beritaTerbaru = berita.slice(0, 5);
 
-  const totalBerita = berita.length;
-  const totalDivisi = divisi.length;
-  const totalBanner = bannerImages.length;
-  const beritaTerbaru = berita.slice(0, 5);
-
+  /* ======================== RENDER UTAMA ======================== */
   return (
     <>
       <SEO title="Panel Admin" description="Panel administrasi HIMMAH NW Komisariat STMIK." />
       <div className="min-h-screen bg-[#0a0f0a]">
-        <CropModal
-          open={cropModal.open}
-          onClose={() => setCropModal({ ...cropModal, open: false })}
-          imageSrc={cropModal.imageSrc}
-          aspect={cropModal.aspect}
-          cropShape={cropModal.cropShape}
-          onCropComplete={cropModal.onCropComplete}
-        />
+        <CropModal open={cropModal.open} onClose={() => setCropModal({ ...cropModal, open: false })} imageSrc={cropModal.imageSrc} aspect={cropModal.aspect} cropShape={cropModal.cropShape} onCropComplete={cropModal.onCropComplete} />
 
         <div className="flex min-h-screen">
-          {isSidebarOpen && (
-            <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
-          )}
+          {isSidebarOpen && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />}
           <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0d1a0d] border-r border-green-900/30 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
             <div className="flex flex-col h-full">
               <div className="p-6 border-b border-green-900/30 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center"><span className="text-green-400 font-bold text-sm">HN</span></div>
-                  <div><p className="text-white font-bold text-sm">HIMMAH NW</p><p className="text-green-400/60 text-xs">Panel Admin</p></div>
-                </div>
+                <div className="flex items-center gap-3"><div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center"><span className="text-green-400 font-bold text-sm">HN</span></div><div><p className="text-white font-bold text-sm">HIMMAH NW</p><p className="text-green-400/60 text-xs">Panel Admin</p></div></div>
                 <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-white/60 hover:text-white"><X size={20} /></button>
               </div>
               <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                 {tabs.map(tab => (
-                  <button key={tab.key} onClick={() => { handleTabChange(tab.key); setSidebarOpen(false); }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === tab.key ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                    {tab.icon}{tab.label}
-                  </button>
+                  <button key={tab.key} onClick={() => { handleTabChange(tab.key); setSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === tab.key ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>{tab.icon}{tab.label}</button>
                 ))}
               </nav>
-              <div className="p-4 border-t border-green-900/30">
-                <button onClick={logout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition-all"><LogOut size={16} /> Logout</button>
-              </div>
+              <div className="p-4 border-t border-green-900/30"><button onClick={logout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition-all"><LogOut size={16} /> Logout</button></div>
             </div>
           </aside>
 
@@ -849,7 +442,7 @@ const handleDeletePengumuman = (id) => {
                     <h3 className="text-white font-bold text-lg mb-4">💾 Backup & Restore Data</h3>
                     <p className="text-gray-400 text-sm mb-4">Download semua data sebagai file JSON untuk backup, atau upload file backup untuk restore.</p>
                     <div className="flex gap-3 flex-wrap">
-                      <button onClick={() => { const data = { berita, divisi, pengurus, bannerImages, logo, countdownEvent, poll, anggotaList, beritaInternal, inviteCode }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `backup-himmah-${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url); }} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium">📥 Download Backup</button>
+                      <button onClick={() => { const data = { berita, divisi, pengurus, bannerImages, logo, countdownEvent, poll, anggotaList, beritaInternal, inviteCode, presensiList, pengumumanList }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `backup-himmah-${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url); }} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium">📥 Download Backup</button>
                       <label className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-medium cursor-pointer">📤 Restore Backup <input type="file" accept=".json" onChange={async (e) => { const file = e.target.files[0]; if (!file) return; if (!window.confirm('Yakin ingin merestore data?')) return; try { const text = await file.text(); const data = JSON.parse(text); saveBerita(data.berita || []); saveDivisi(data.divisi || []); savePengurus(data.pengurus || defaultPengurus); saveBanner(data.bannerImages || []); saveLogo(data.logo || null); if (data.countdownEvent) saveCountdownEvent(data.countdownEvent); if (data.poll) savePoll(data.poll); if (data.anggotaList) saveAnggotaList(data.anggotaList); if (data.beritaInternal) saveBeritaInternal(data.beritaInternal); if (data.inviteCode) saveInviteCode(data.inviteCode); alert('Restore berhasil!'); } catch (err) { alert('Gagal restore: ' + err.message); } }} className="hidden" /></label>
                     </div>
                   </div>
@@ -1165,122 +758,77 @@ const handleDeletePengumuman = (id) => {
                 <div className="space-y-6">
                   <div><h2 className="text-2xl font-playfair font-bold text-white">Kode Undangan Anggota</h2><p className="text-gray-400 text-sm mt-1">Atur kode rahasia untuk pendaftaran anggota baru</p></div>
                   <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-6 space-y-4">
-                    <div>
-                      <label className="text-gray-400 text-xs mb-1 block">Kode Undangan</label>
-                      <input type="text" value={inviteCodeForm} onChange={(e) => setInviteCodeForm(e.target.value)} className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white" placeholder="Masukkan kode undangan" />
-                    </div>
+                    <div><label className="text-gray-400 text-xs mb-1 block">Kode Undangan</label><input type="text" value={inviteCodeForm} onChange={(e) => setInviteCodeForm(e.target.value)} className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white" placeholder="Masukkan kode undangan" /></div>
                     <button onClick={handleSaveInviteCode} className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl text-sm font-medium"><Save size={16} className="inline mr-1" /> Simpan Kode</button>
                   </div>
                 </div>
               )}
 
               {activeTab === 'pengumuman' && (
-  <div className="space-y-6">
-    <div>
-      <h2 className="text-2xl font-playfair font-bold text-white">Pengumuman</h2>
-      <p className="text-gray-400 text-sm mt-1">Kelola pengumuman untuk anggota</p>
-    </div>
-    <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-6">
-      <h3 className="text-white font-bold text-lg mb-4">➕ Tambah Pengumuman</h3>
-      <form onSubmit={handlePengumumanSubmit} className="space-y-3">
-        <input
-          type="text"
-          placeholder="Judul Pengumuman"
-          value={pengumumanForm.judul}
-          onChange={(e) => setPengumumanForm({ ...pengumumanForm, judul: e.target.value })}
-          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white"
-          required
-        />
-        <textarea
-          placeholder="Isi Pengumuman"
-          value={pengumumanForm.isi}
-          onChange={(e) => setPengumumanForm({ ...pengumumanForm, isi: e.target.value })}
-          rows="3"
-          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white resize-none"
-          required
-        />
-        <input
-          type="date"
-          value={pengumumanForm.tanggal}
-          onChange={(e) => setPengumumanForm({ ...pengumumanForm, tanggal: e.target.value })}
-          className="px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white"
-        />
-        <button
-          type="submit"
-          className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl text-sm font-medium"
-        >
-          <Plus size={16} className="inline mr-1" /> Kirim Pengumuman
-        </button>
-      </form>
-    </div>
-    
-    <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-6">
-      <h3 className="text-white font-bold text-lg mb-4">📋 Daftar Pengumuman</h3>
-      {pengumumanList.length === 0 ? (
-        <p className="text-gray-400 text-sm">Belum ada pengumuman.</p>
-      ) : (
-        <div className="space-y-2">
-          {pengumumanList.map((p) => (
-            <div key={p.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-              <div>
-                <p className="text-white text-sm font-medium">{p.judul}</p>
-                <p className="text-gray-400 text-xs">{p.tanggal || '-'}</p>
-                <p className="text-green-300/70 text-xs mt-1 line-clamp-2">{p.isi}</p>
-              </div>
-              <button
-                onClick={() => handleDeletePengumuman(p.id)}
-                className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg flex-shrink-0"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  </div>
-)}
+                <div className="space-y-6">
+                  <div><h2 className="text-2xl font-playfair font-bold text-white">Pengumuman</h2><p className="text-gray-400 text-sm mt-1">Kelola pengumuman untuk anggota</p></div>
+                  <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-6">
+                    <h3 className="text-white font-bold text-lg mb-4">➕ Tambah Pengumuman</h3>
+                    <form onSubmit={handlePengumumanSubmit} className="space-y-3">
+                      <input type="text" placeholder="Judul Pengumuman" value={pengumumanForm.judul} onChange={(e) => setPengumumanForm({ ...pengumumanForm, judul: e.target.value })} className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white" required />
+                      <textarea placeholder="Isi Pengumuman" value={pengumumanForm.isi} onChange={(e) => setPengumumanForm({ ...pengumumanForm, isi: e.target.value })} rows="3" className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white resize-none" required />
+                      <input type="date" value={pengumumanForm.tanggal} onChange={(e) => setPengumumanForm({ ...pengumumanForm, tanggal: e.target.value })} className="px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white" />
+                      <button type="submit" className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl text-sm font-medium"><Plus size={16} className="inline mr-1" /> Kirim Pengumuman</button>
+                    </form>
+                  </div>
+                  <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-6">
+                    <h3 className="text-white font-bold text-lg mb-4">📋 Daftar Pengumuman</h3>
+                    {pengumumanList.length === 0 ? <p className="text-gray-400 text-sm">Belum ada pengumuman.</p> : (
+                      <div className="space-y-2">
+                        {pengumumanList.map((p) => (
+                          <div key={p.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                            <div>
+                              <p className="text-white text-sm font-medium">{p.judul}</p>
+                              <p className="text-gray-400 text-xs">{p.tanggal || '-'}</p>
+                              <p className="text-green-300/70 text-xs mt-1 line-clamp-2">{p.isi}</p>
+                            </div>
+                            <button onClick={() => handleDeletePengumuman(p.id)} className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg flex-shrink-0"><Trash2 size={14} /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
-{activeTab === 'presensi' && (
-  <div className="space-y-6">
-    <div>
-      <h2 className="text-2xl font-playfair font-bold text-white">Rekap Presensi</h2>
-      <p className="text-gray-400 text-sm mt-1">Lihat presensi anggota hari ini</p>
-    </div>
-    
-    <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-white font-bold text-lg">
-          📋 Presensi Hari Ini ({new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })})
-        </h3>
-        <span className="text-green-400 text-sm bg-green-500/10 px-3 py-1 rounded-full">
-          Total: {presensiList.filter(p => p.tanggal === new Date().toISOString().slice(0, 10)).length} hadir
-        </span>
-      </div>
-      
-      {presensiList.filter(p => p.tanggal === new Date().toISOString().slice(0, 10)).length === 0 ? (
-        <p className="text-gray-400 text-sm">Belum ada yang presensi hari ini.</p>
-      ) : (
-        <div className="space-y-2">
-          {presensiList
-            .filter(p => p.tanggal === new Date().toISOString().slice(0, 10))
-            .map((p) => (
-              <div key={p.id} className="flex items-center justify-between bg-white/5 rounded-lg p-3">
-                <div>
-                  <p className="text-white text-sm font-medium">{p.nama}</p>
-                  <p className="text-gray-400 text-xs">{p.nim} · {p.divisi}</p>
+              {activeTab === 'presensi' && (
+                <div className="space-y-6">
+                  <div><h2 className="text-2xl font-playfair font-bold text-white">Rekap Presensi</h2><p className="text-gray-400 text-sm mt-1">Lihat presensi anggota hari ini</p></div>
+                  <div className="bg-[#111a11] border border-green-900/30 rounded-2xl p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-white font-bold text-lg">
+                        📋 Presensi Hari Ini ({new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })})
+                      </h3>
+                      <span className="text-green-400 text-sm bg-green-500/10 px-3 py-1 rounded-full">
+                        Total: {presensiList.filter(p => p.tanggal === new Date().toISOString().slice(0, 10)).length} hadir
+                      </span>
+                    </div>
+                    {presensiList.filter(p => p.tanggal === new Date().toISOString().slice(0, 10)).length === 0 ? (
+                      <p className="text-gray-400 text-sm">Belum ada yang presensi hari ini.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {presensiList.filter(p => p.tanggal === new Date().toISOString().slice(0, 10)).map((p) => (
+                          <div key={p.id} className="flex items-center justify-between bg-white/5 rounded-lg p-3">
+                            <div>
+                              <p className="text-white text-sm font-medium">{p.nama}</p>
+                              <p className="text-gray-400 text-xs">{p.nim} · {p.divisi}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-green-400 text-xs">{p.waktu}</p>
+                              <span className="text-green-400 text-xs bg-green-500/10 px-2 py-1 rounded-full">Hadir</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-green-400 text-xs">{p.waktu}</p>
-                  <span className="text-green-400 text-xs bg-green-500/10 px-2 py-1 rounded-full">Hadir</span>
-                </div>
-              </div>
-            ))}
-        </div>
-      )}
-    </div>
-  </div>
-)}
+              )}
 
               {activeTab === 'countdown' && (
                 <div className="space-y-6">
