@@ -8,8 +8,7 @@ const defaultPengurus = {
 
 const defaultDivisi = [
   {
-    id: 1,
-    nama: 'Divisi Dakwah & Keagamaan',
+    id: 1, nama: 'Divisi Dakwah & Keagamaan',
     programKerja: ['Pengajian Rutin Mingguan', 'Peringatan Hari Besar Islam', 'Kajian Kitab Kuning', 'Pelatihan Tilawah & Tartil'],
     anggota: [
       { nama: 'Muhammad Ali', jabatan: 'Kadiv', foto: '' },
@@ -19,8 +18,7 @@ const defaultDivisi = [
     ],
   },
   {
-    id: 2,
-    nama: 'Divisi Pendidikan & Pelatihan',
+    id: 2, nama: 'Divisi Pendidikan & Pelatihan',
     programKerja: ['Seminar Teknologi', 'Workshop Programming', 'Pelatihan Desain Grafis', 'Study Club'],
     anggota: [
       { nama: 'Baiq Dewi', jabatan: 'Kadiv', foto: '' },
@@ -30,8 +28,7 @@ const defaultDivisi = [
     ],
   },
   {
-    id: 3,
-    nama: 'Divisi Sosial & Kemasyarakatan',
+    id: 3, nama: 'Divisi Sosial & Kemasyarakatan',
     programKerja: ['Bakti Sosial', 'Santunan Anak Yatim', 'Bersih Lingkungan', 'Donor Darah'],
     anggota: [
       { nama: 'Abdul Hamid', jabatan: 'Kadiv', foto: '' },
@@ -41,8 +38,7 @@ const defaultDivisi = [
     ],
   },
   {
-    id: 4,
-    nama: 'Divisi Minat & Bakat',
+    id: 4, nama: 'Divisi Minat & Bakat',
     programKerja: ['Futsal Competition', 'Pentas Seni', 'Lomba Debat', 'Pelatihan Public Speaking'],
     anggota: [
       { nama: 'Fajar Ramadhan', jabatan: 'Kadiv', foto: '' },
@@ -93,6 +89,8 @@ export function AppProvider({ children }) {
   const [anggotaList, setAnggotaList] = useState([]);
   const [beritaInternal, setBeritaInternal] = useState([]);
   const [inviteCode, setInviteCode] = useState('HIMMAH2024');
+  const [presensiList, setPresensiList] = useState([]);
+  const [pengumumanList, setPengumumanList] = useState([]);
   const [dataLoaded, setDataLoaded] = useState(false);
 
   const DATA_BLOB_URL = 'https://trwurgahpjquoqvn.public.blob.vercel-storage.com/data.json';
@@ -111,6 +109,8 @@ export function AppProvider({ children }) {
     setAnggotaList(data.anggotaList || []);
     setBeritaInternal(data.beritaInternal || []);
     setInviteCode(data.inviteCode || 'HIMMAH2024');
+    setPresensiList(data.presensiList || []);
+    setPengumumanList(data.pengumumanList || []);
   };
 
   useEffect(() => {
@@ -166,61 +166,78 @@ export function AppProvider({ children }) {
 
   const saveBerita = (data) => {
     setBerita(data);
-    saveAllData({ berita: data, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode });
+    saveAllData({ berita: data, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode, presensiList, pengumumanList });
   };
   const saveDivisi = (data) => {
     setDivisi(data);
-    saveAllData({ berita, divisi: data, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode });
+    saveAllData({ berita, divisi: data, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode, presensiList, pengumumanList });
   };
   const savePengurus = (data) => {
     setPengurus(data);
-    saveAllData({ berita, divisi, pengurus: data, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode });
+    saveAllData({ berita, divisi, pengurus: data, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode, presensiList, pengumumanList });
   };
   const saveBanner = (data) => {
     setBannerImages(data);
-    saveAllData({ berita, divisi, pengurus, bannerImages: data, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode });
+    saveAllData({ berita, divisi, pengurus, bannerImages: data, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode, presensiList, pengumumanList });
   };
   const saveLogo = (url) => {
     setLogo(url);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo: url, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode });
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo: url, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode, presensiList, pengumumanList });
   };
   const saveKomentarBaru = (beritaId, data, replace = false) => {
     const updatedKomentar = { ...komentar, [beritaId]: replace ? data : [...(komentar[beritaId] || []), data] };
     setKomentar(updatedKomentar);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar: updatedKomentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode });
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar: updatedKomentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode, presensiList, pengumumanList });
   };
   const toggleLike = (beritaId) => {
     const updated = { ...likes, [beritaId]: (likes[beritaId] || 0) + 1 };
     setLikes(updated);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes: updated, countdownEvent, poll, anggotaList, beritaInternal, inviteCode });
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes: updated, countdownEvent, poll, anggotaList, beritaInternal, inviteCode, presensiList, pengumumanList });
   };
   const saveCountdownEvent = (event) => {
     setCountdownEvent(event);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent: event, poll, anggotaList, beritaInternal, inviteCode });
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent: event, poll, anggotaList, beritaInternal, inviteCode, presensiList, pengumumanList });
   };
   const removeCountdownEvent = () => {
     setCountdownEvent(null);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent: null, poll, anggotaList, beritaInternal, inviteCode });
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent: null, poll, anggotaList, beritaInternal, inviteCode, presensiList, pengumumanList });
   };
   const savePoll = (newPoll) => {
     setPoll(newPoll);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll: newPoll, anggotaList, beritaInternal, inviteCode });
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll: newPoll, anggotaList, beritaInternal, inviteCode, presensiList, pengumumanList });
   };
   const removePoll = () => {
     setPoll(null);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll: null, anggotaList, beritaInternal, inviteCode });
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll: null, anggotaList, beritaInternal, inviteCode, presensiList, pengumumanList });
   };
   const saveAnggotaList = (data) => {
     setAnggotaList(data);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList: data, beritaInternal, inviteCode });
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList: data, beritaInternal, inviteCode, presensiList, pengumumanList });
   };
   const saveBeritaInternal = (data) => {
     setBeritaInternal(data);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal: data, inviteCode });
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal: data, inviteCode, presensiList, pengumumanList });
   };
   const saveInviteCode = (code) => {
     setInviteCode(code);
-    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode: code });
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode: code, presensiList, pengumumanList });
+  };
+
+  const savePresensi = (data) => {
+    setPresensiList(data);
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode, presensiList: data, pengumumanList });
+  };
+
+  const savePengumuman = (pengumumanBaru) => {
+    const updated = [pengumumanBaru, ...pengumumanList];
+    setPengumumanList(updated);
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode, presensiList, pengumumanList: updated });
+  };
+
+  const deletePengumuman = (id) => {
+    const updated = pengumumanList.filter(p => p.id !== id);
+    setPengumumanList(updated);
+    saveAllData({ berita, divisi, pengurus, bannerImages, logo, komentar, likes, countdownEvent, poll, anggotaList, beritaInternal, inviteCode, presensiList, pengumumanList: updated });
   };
 
   const login = () => {
@@ -256,6 +273,8 @@ export function AppProvider({ children }) {
         anggotaList, saveAnggotaList,
         beritaInternal, saveBeritaInternal,
         inviteCode, saveInviteCode,
+        presensiList, savePresensi,
+        pengumumanList, savePengumuman, deletePengumuman,
       }}
     >
       {children}
